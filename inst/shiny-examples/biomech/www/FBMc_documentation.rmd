@@ -1,0 +1,132 @@
+---
+title: "FBMc/FBMcw Shiny App documentation"
+author: "G. J. Meijer"
+date: "13/05/2021"
+output: html_document
+---
+
+
+# FBMc/FBMcw: Generic form of fibre bundle models for soil reinforcement by plant roots
+
+This application demonstrates root reinforcement predictions according to the generic fibre bundle models (FBMc, FBMcw) developed by Meijer (2021):
+
+> G.J. Meijer. 2021. "A generic form of fibre bundle models for root reinforcement of soil". Plant & Soil x(x):xx-xx. DOI:xxx
+
+This interactive application is intended to rapidly and easily explore the effect of various root biomechanical parameters, root area ratio parameters and load sharing rules on mobilisation and magnitude of root reinforcement. Please cite the above publication when using the model or its source code. For any question or comments, please contact <gjm36@bath.ac.uk>.
+
+G.J. Meijer (University of Bath), April 2021
+
+
+## Key model features
+
+The model provides insight both in the mobilisation and magnitude of the peak root reinforcement ($c_{r,u}$). Key features of the generic fibre bundle models:
+
+- Sharing of tensile loads by different roots is governed by power law coefficient $\beta_F$. The relation between tensile force $F$ in (intact) roots $i$ and $j$ is assumed to depend on their diameter $d_r$:
+    $$ \frac{F_i}{F_j} = \left(\frac{d_{r,i}}{d_{r,j}}\right)^{\beta_F} $$
+    It is shown in the paper that all existing fibre bundle models, including the Root Bundle Models, can be expressed in terms of their inherent assumption of $\beta_F$ (see documentation on Plot 2);
+- Power-law distributions for root biomechanical parameters versus root diameter ($d_r$), i.e. for the root tensile strength ($t_{r,u}$) and root stiffness ($E_r$);
+- Linear elastic tensile stress-strain behaviour until root tensile failure;
+- All root diameters are bound between a minimum ($d_{r,min}$) and maximum ($d_{r,max}$) diameter. The distribution of the total root area ratio ($\phi_{r,t}$) is assumed continuous over all diameters in this range following a power-law curve;
+- The FBMcw includes an additional root survival function (not used in the FBMc), describing the probability of a root still being unbroken depending on the current stress and strain experiences by the root, using a Weibull function defined by the shape parameter $\kappa$;
+
+
+## Plot 1: Mobilisation of reinforcement in FBMc/FBMcw
+
+Sequential mobilisation of root strength reduces the peak reinforcement ($c_{r,u}$) compared to the Wu/Waldron model (WWM). This reduction in peak reinforcement is expressed by the parameter $k"$:
+$$ k'' = \frac{c_{r,u,FBMc}}{c_{r,u,WWMc}} \qquad k'' = \frac{c_{r,u,FBMcw}}{c_{r,u,WWMc}} $$
+where $c_{r,u,WWMc}$ is the peak reinforcement calculated by the WWM model assuming the same continuous distribution of root area ratio across all root diameters.
+
+The magnitude of $k''$ is a function only of:
+
+- $d_{r,min}$: diameter of the smallest root
+- $d_{r,max}$: diameter of the thickest root
+- $\beta_t$: power-law coefficient for root tensile strength as function of root diameter
+- $\beta_\phi$: power-law coefficient for root area ratio distribution as function of root diameter 
+- $\beta_F$: assumed load sharing parameter
+
+And in the case of the FBMcw, one additional parameter is required:
+
+- $\kappa$: Weibull shape parameter of the root survival function
+
+The plot shows how the root reinforcement is mobilised as function of strain. The strain measure is expressed as the tensile strain ($\epsilon_{r,0}$) in a root with a particular diameter, i.e. the reference diameter $d_r = d_{r,0} = 1$ mm), normalised by the the tensile strain required to bring a root with this diameter to failure in tension  ($\epsilon_{r,u,0}$). 
+
+
+## Plot 2: Comparison of load sharing rules
+
+This plot explores how the predicted (reduction in) peak root reinforcement varies as function of:
+
+1. The **generic form** of the model, e.g. 'FBMc' (continuous distribution of roots) or 'FBMcw' (continuous distribution of roots + Weibull survival functions)
+2. The **load sharing mechanism** adopted within the generic form of the model
+
+Many existing load sharing mechanisms are included (for full details, please see Meijer 2021):
+
+- **WWM**: ($\beta_F=2+\beta_t$)
+    
+    The Wu/Waldon assumption: force is distributed proportially to the maximum tensile load each root can carry. This results in all roots breaking simultaneously.
+
+- **FBM with $\beta_F=0$**: ($\beta_F=0$)
+
+    Force is distributed equally across all roots, regardless of diameter.
+
+- **FBM with $\beta_F=1$**: ($\beta_F=1$) 
+
+    Force is distributed proportionally to the diameter of each root.
+    
+- **FBM with $\beta_F=2$**: ($\beta_F=2$)
+
+    Force is distributed proportionally to the cross-sectional area of each root.
+
+- **RBMw**: ($\beta_F=2+\beta_E-\beta_L$)
+
+    Equal root elongation is assumed in each root. Tensile strain is constant along the entire root length, which may vary as function of the root diameter according to a power law.
+    
+- **FBM-WN**: ($\beta_F=2+0.5\beta_E$)
+
+    The same amount of mechanical work (defined as energy per unit volume of root) is applied to each root, regardless of diamater.
+
+- **FBM-WDia**: ($\beta_F=2.5+0.5\beta_E$)
+
+    The mechanical work is applied proportionally to the diameter of each root.
+
+- **FBM-WS**: ($\beta_F=3+0.5\beta_E$) 
+
+    The mechanical work is applied proportionally to the cross-sectional area of each root.
+    
+- **Waldron**: ($\beta_F=1.5+0.5\beta_E$)
+
+    Force is distributed according to the root mobilisation model proposed by Waldron (1977), accounting for root stiffness and root-soil interface shear resistance.
+    
+- **User input**: 
+    
+    The value of $\beta_F$ defined by the user under 'Plot 1'.
+
+To calculate $k"$ for all load sharing mechanisms, two additional parameters are required:
+
+- $\beta_E$: The power-law coefficient in a root diameter-root stiffness fit;
+- $\beta_L$: The power-law coefficient in a root diameter-root length fit.
+
+
+## Plot 2: Peak root reinforcement predictions ('root cohesion')
+
+The magnitude of the *peak* root reinforcement ($c_{r,u}$) can be calculated for each model and load sharing assumption once the WWMc solution is calculated. This requries three additional parameters:
+
+- $\phi_{r,t}$: The total root area ratio (the percentage of the soil cross-sectional area occupied by roots);
+- $t_{r,u,0}$: The tensile strength of a root with a diameter equal to the reference diameter $d_r=d_{r,0}=1$ mm;
+- $k'$: The factor in the Wu/Waldron model accounting for the orientation of roots are failure (and the angle of internal friction of the soil), often assumed as $k'=1.2$. 
+
+
+## Plot 4: Effect of using discrete diameter classes
+
+The final plot shows how root reinforcement predictions change when a discrete number of root diameter classes rather than a continuous distribution is used. These model predictions are indicated by 'FBM' (the 'traditional' form of fibre bundle models) and 'FBMw' ('FBM' with added Weibull survival functions).
+
+The root classes are evenly distributed over the diameter range $d_{r,min} \leq d_r \leq d_{r,max}$ into a number of classes described by parameter:
+
+- $n_c$: Number of discrete root diameter classes used
+
+The representative diameter of each class, used to calculate tensile stresses, strenghths etc, is chosen as the diameter halfway the lower ($d_{r,min,i}$) and upper diameter bound ($d_{r,max,i}$) of each class $i$:
+$$ d_{r,i} = \frac{d_{r,min,i}+d_{r,max,i}}{2} $$
+The root area ratio $\phi_{r,t,i}$ assined to each class satisfies:
+$$ \frac{\phi_{r,t,i}}{\phi_{r,t}} = \frac{d_{r,max,i}^{1+\beta_\phi}-d_{r,min,i}^{1+\beta_\phi}}{d_{r,max}^{1+\beta_\phi}-d_{r,min}^{1+\beta_\phi}} $$
+or, in the mathematical exception case where $1+\beta_\phi=0$:
+$$ \frac{\phi_{r,t,i}}{\phi_{r,t}} = \frac{\ln\left(\frac{d_{r,max,i}}{d_{r,min,i}}\right)}{\ln\left(\frac{d_{r,max}}{d_{r,min}}\right)} $$
+This ensures that both the power law nature and the total root area ratio are maintained despite discretisation of a continuous distribution into a number of discrete diameter classes.

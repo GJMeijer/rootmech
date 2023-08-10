@@ -1,0 +1,128 @@
+\documentclass[a4 paper, 11  pt]{article}
+
+\usepackage{tabu}  %extended table
+\usepackage{ctable}  %extended table
+\usepackage{graphicx} %include figures 
+\usepackage{epstopdf} %include eps files (transforms eps into pdf)
+\usepackage[authoryear,round]{natbib} %style references
+\usepackage{amsmath} %mathematical symbols
+\usepackage{amssymb} %mathematical symbols 
+%\usepackage{bm} %bold mathematical symbols
+\usepackage{lineno} %line numbers
+\usepackage[colorlinks=true, linkcolor=red, citecolor=blue]{hyperref} %format references - colored and hyperlinked
+\usepackage{physics} %for differential d's
+\usepackage{rotating}
+
+
+%\usepackage{etoolbox}
+%\AtBeginEnvironment{longtabu}{\footnotesize}{}{}
+
+\textwidth=15.5cm
+\textheight=24.0cm
+\topmargin=-1cm
+\oddsidemargin= 0.2cm
+\evensidemargin= 0.2cm
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\linespread{1.1} 	
+
+\newcommand{\footremember}[2]{%
+    \footnote{#2}
+    \newcounter{#1}
+    \setcounter{#1}{\value{footnote}}%
+}
+\newcommand{\footrecall}[1]{%
+    \footnotemark[\value{#1}]%
+} 
+\title{Fitting root diameter counts with power law probabilities}
+\author{%
+  G. J. Meijer\footremember{uob}{Department of Architecture and Civil Engineering, University of Bath, Bath BA2 7AY, UK.}\footremember{corr}{Corresponding author, \texttt{gjm36@bath.ac.uk}}%
+}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+\linenumbers
+
+\section{Segments}
+
+The probability can be described using a multi-segmented power-law curves that is C$^0$ continuous. $n$ is the number of segments, separated by breakpoint values $x_b$ (length $n-1$). The minimum and maximum observed values of $x$ are given by $x_{min}$ and $x_{max}$, which automatically form the lower bound of the first segment and upper bound of the final segment when maximising the probability.
+
+\section{Individual probabilities}
+
+The probability in each segment $i$ is given by:
+\begin{equation}
+	p = \alpha_i x^{\beta_i}
+\end{equation}
+Because of C$^0$ continuity, at breakpoint location $j$:
+\begin{equation}
+	\alpha_{j} x_{b,j}^{\beta_{j}} = \alpha_{j+1} x_{b,j}^{\beta_{j+1}}
+\end{equation}
+so the multiplier $\alpha$ for the next segment satisfies:
+\begin{equation}
+	\alpha_{j+1} = \alpha_{j} x_{b,j}^{\beta_{j}-\beta_{j+1}}
+\end{equation}
+
+The probability in segment $j$ ($2 \leq j \leq n$) can now be described as:
+\begin{equation}
+	p_j = \alpha_1 x^{\beta_j} \prod_{i=2}^{j} x_{b,i-1}^{\beta_{i-1} - \beta_{i}}
+\end{equation}
+or alternatively as:
+\begin{equation}
+	p_j = \alpha_1 x^{\beta_1} \prod_{i=2}^{j} \left(\frac{x}{x_{b,i-1}}\right)^{\beta_{i} - \beta_{i-1}}
+	\label{eq:pj}
+\end{equation}
+
+The log-transformed value of Equation \ref{eq:pj} is:
+\begin{equation}
+	\log\left(p_j\right) = \log\left(\alpha_1\right) + 
+	\beta_1 \log\left(x\right) + 
+	\sum_{i=2}^{j} \left(\beta_i - \beta_{i-1}\right)\left(\log\left(x\right) - \log\left(x_{b,i-1}\right)\right)
+	\label{eq:logpj}
+\end{equation}
+Using the Heaviside function $H()$, the probability of any $x$ can be written as:
+\begin{equation}
+	\log\left(p\right) = \log\left(\alpha_1\right) + 
+	\beta_1 \log\left(x\right) + 
+	\sum_{i=1}^{n-1} \left(\beta_{i+1} - \beta_{i}\right)\left(\log\left(x\right) - \log\left(x_{b,i}\right)\right) H\left[\left(\log\left(x\right) - \log\left(x_{b,i}\right)\right)\right]
+	\label{eq:logpj2}
+\end{equation}
+which is a function that can easily be vectorised in a numerical algorithm.
+
+\section{Multiplication constant $\alpha_1$}
+
+The unknown value of $\alpha_1$ should be set so that the total probability under the multi-segment curve (sum of total probabilities for each segment) is equal to one:
+\begin{equation}
+	1 = \sum_i \int \alpha_i x^{\beta_i} dx
+\end{equation}
+Therefore $\alpha_1$ can be expressed in terms of the $\beta$ and $x_b$ vectors. Define vector $\gamma$ as the vector containing all the boundaries of all segments:
+\begin{equation}
+	\gamma = [x_{min}, \vb{x}_b, x_{max}]
+\end{equation}
+The value of integral functions for each segment $i$:
+\begin{equation}
+	I_i = \int_{x=\gamma_i}^{\gamma_{i+1}} x^{\beta_i} dx
+	=
+	\begin{cases}
+		\frac{\gamma_{i+1}^{\beta_i + 1} - \gamma_i^{\beta_i + 1}}{\beta_i + 1} &
+		\text{when } \beta_i \neq -1 \\
+		\log\left(\gamma_{i+1}\right) - \log\left(\gamma_i\right) &
+		\text{when } \beta_i = -1
+	\end{cases}
+\end{equation}
+We can write:
+\begin{equation}
+	1 = \sum_i \alpha_i I_i
+\end{equation}
+Given that:
+\begin{equation}
+	\frac{\alpha_i}{\alpha_1} = \prod_{j=1}^{i-1} x_{b,j}^{\beta_j - \beta_{j+1}}
+\end{equation}
+We can rewrite $\alpha_1$ as:
+\begin{equation}
+	\alpha_1^{-1} = \sum_{i=1}^{n} I_i \prod_{j=1}^{i-1} x_{b,j}^{\beta_j - \beta_{j+1}}
+\end{equation}
+
+
+\end{document}
