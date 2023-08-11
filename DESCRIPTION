@@ -1,11 +1,24 @@
 Package: rootmech
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Plant Root Parameter Fitting
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R:
+    c(person(given = "Gerrit",
+             family = "Meijer",
+             role = c("aut", "cre"),
+             email = "gjm36@bath.ac.uk",
+             comment = c(ORCID = "0000-0002-2815-5480")),
+      person(given = "University of Bath",
+             role = c("cph")))
+Description: Fitting and plotting functions for root parameter fitting.
+    Contains functions to plot multisegment power-law probability distributions
+    for root diameters, as well as power-law+Weibull fitting of root
+    biomechanical parameters such as strength and strain to failure.
+License: file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports:
+    ggplot2 (>= 3.4.0),
+    shiny,
+    rlang
+RoxygenNote: 7.2.3

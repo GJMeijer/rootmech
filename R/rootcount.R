@@ -12,6 +12,9 @@
 #' @param weights vector with weights for each observation. The individual
 #'   probabilities are raised to the power `weights`. By default, all
 #'   observations are weighted equally (`weights = 1`)
+#' @param par0 vector with user-defined initial guess for th vector of fitting
+#'   parameters (`ns - 1` breakpoints, followed by `ns` power coefficients).
+#'   If not defined, a simple guess is made
 #' @return a list with the loglikelihood (field `loglikelihood`) and a
 #'   dataframe (field `par`) with the fitting results for each segment.
 #'   Each segment is defined using the lower and upper x-limit (`xmin`, `xmax`),
@@ -21,17 +24,32 @@
 #' x <- rweibull(100, 4, 6)
 #' rootcount_fit(x, 2)
 #'
+#' x <- c(
+#'   rweibull(25, shape = 4, scale = 1),
+#'   rweibull(25, shape = 6, scale = 3),
+#'   rweibull(25, shape = 12, scale = 6)
+#' )
+#' ft1 <- rootcount_fit(x, 6)
+#' rootcount_cumulative_plot(x, ft1$par)
+#' ft2 <- rootcount_fit(x, 6, par0 = c(1, 1.5, 2, 2.5, 3, rep(0, 6)))
+#' rootcount_cumulative_plot(x, ft2$par)
+#'
 rootcount_fit <- function(
     x,
     ns,
     xmin = min(x, na.rm = TRUE),
     xmax = max(x, na.rm = TRUE),
-    weights = rep(1, length(x))
+    weights = rep(1, length(x)),
+    par0 = NULL
 ) {
+  # remove NA values from array
+  x <- x[!is.na(x)]
   # cases
   if (ns == 1) {
     # initial guess
-    par0 <- rootcount_initialguess_single(x)
+    if (is.null(par0)) {
+      par0 <- rootcount_initialguess_single(x)
+    }
     # single segment
     sol <- stats::optim(
       par0,
@@ -50,7 +68,9 @@ rootcount_fit <- function(
     pt <- 1
   } else {
     # initial guess
-    par0 <- rootcount_initialguess(x, ns)
+    if (is.null(par0)) {
+      par0 <- rootcount_initialguess(x, ns)
+    }
     # get constraints
     constr <- rootcount_constraints(ns, xmin, xmax)
     # optimize
@@ -226,7 +246,7 @@ rootcount_logprob <- function(logxb, b, logx) {
 #' Jlogxb
 #' Jb
 #'
-rootcount_logprob_jacobian <- function(logxb, b, logx, weights = rep(1, length(logx))) {
+rootcount_logprob_jacobian <- function(logxb, b, logx) {
   # number of segments and observations
   ns <- length(b)
   nx <- length(logx)
@@ -703,3 +723,4 @@ rootcount_density_fitted <- function(dfp, n = 101) {
   # return
   df[, c("bundle_id", "x", "y")]
 }
+

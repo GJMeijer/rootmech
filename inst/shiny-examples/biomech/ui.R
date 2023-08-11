@@ -6,13 +6,13 @@
 
 #make UI
 ui <- shiny::navbarPage(
-  title = "Root biomechanics",
+  title = "Root fitting",
   position = "fixed-top",
   collapsible = TRUE,
 
-  # Data tab
+  # Biomech: data tab
   shiny::tabPanel(
-    "Data",
+    "Biomechanics: data",
     tags$style(type="text/css", "body {padding-top: 70px;}"),
     fluidRow(
       fileInput(
@@ -50,7 +50,7 @@ ui <- shiny::navbarPage(
 
   # Fit tab
   shiny::tabPanel(
-    "Fit",
+    "Biomechanics: fit",
     tags$style(type="text/css", "body {padding-top: 70px;}"),
     radioButtons(
       "weightpowerlaw",

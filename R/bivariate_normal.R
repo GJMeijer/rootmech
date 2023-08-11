@@ -11,6 +11,7 @@
 #' @param sd vector with standard deviations
 #' @param rho correlation coefficient
 #' @return 2*2 matrix
+#' @export
 #' @examples
 #' bivariate_normal_variancematrix(sd = c(2, 3), rho = 0.4)
 #'
@@ -30,11 +31,14 @@ bivariate_normal_variancematrix <- function(sd = c(1, 1), rho = 0.0) {
 #' standard deviations and a correlation coefficient.
 #'
 #' @param n number of samples to draw
-#' @param mu vector with means
+#' @param mu vector with means for x and y
+#' @param sd vector with standard deviations for x and y
+#' @param rho correlation coefficient for the bivariate normal distribution
 #' @return dataframe with `x` and `y` fields for randomly generated data
+#' @export
 #' @examples
 #' # example1: mean = 0, sd = 1
-#' x <- binormal_random(100)
+#' x <- bivariate_normal_random(100)
 #' plot(x[, 1], x[, 2])
 #'
 #' # correlated data, with offset
@@ -50,7 +54,7 @@ bivariate_normal_random <- function(
   # generate variance-covariance matrix
   Sigma <- bivariate_normal_variancematrix(sd = sd, rho = rho)
   # random data, without mean taken into account
-  M <- matrix(rnorm(n*2), ncol = 2) %*% chol(Sigma)
+  M <- matrix(stats::rnorm(n*2), ncol = 2) %*% chol(Sigma)
   # add means, and return
   data.frame(
     x = M[, 1] + mu[1],
@@ -65,13 +69,14 @@ bivariate_normal_random <- function(
 #' Generate the coordinates of the prediction interval ellipsoid for a
 #' bivariate normal distribution.
 #'
-#' @inheritParams binormal_random
+#' @inheritParams bivariate_normal_random
 #' @param confidence value of confidence required, centred around the mean (
-#' i.e. setting `confidence = 0.95` gives the ellipsoid that contains a random
-#' point with 95% confidence, with tails of 2.5%)
+#'   i.e. setting `confidence = 0.95` gives the ellipsoid that contains a random
+#'   point with 95\% confidence, with tails of 2.5\%)
 #' @param n number of points on ellipsoid
 #' @return dataframe with coordinates `x` and `y` for each confidence level
 #'   in `confidence`
+#' @export
 #' @examples
 #' # parameters
 #' mu <- c(2, 5)
@@ -128,6 +133,7 @@ bivariate_normal_predictioninterval <- function(
 #' @param log if `log = TRUE`, return the log-transformed probability density
 #'   rather than the probability density
 #' @return vector with probability density for each observation
+#' @export
 #' @examples
 #' # input
 #' mu <- c(5, 2)
@@ -181,6 +187,7 @@ bivariate_normal_density <- function(
 #' @param n number of points to use for each axis
 #' @return dataframe with axis type (fields `axis`, can be `major` or
 #'   `minor`), and the coordiante fields `x` and `y`
+#' @export
 #' @examples
 #' bivariate_normal_axes(rho = 0.5, n = 10)
 #'
@@ -222,6 +229,7 @@ bivariate_normal_axes <- function(
 #' @param shape_x,shape_y Weibull shape parameters for x and y
 #' @param scale_x,scale_y Weibull scale parameters for x and y
 #' @return dataframe with Weibull positions `x` and `y`
+#' @export
 #' @examples
 #' df_norm <- bivariate_normal_predictioninterval(rho = 0.5)
 #' plot(df_norm$x, df_norm$y, "l")
@@ -234,14 +242,14 @@ bivariate_normal_toweibull <- function(
     y,
     shape_x,
     shape_y,
-    mean = c(0, 0),
+    mu = c(0, 0),
     sd = c(1, 1),
     scale_x = 1/gamma(1 + 1/shape_x),
     scale_y = 1/gamma(1 + 1/shape_y)
 ) {
   # cumulative density function
-  px <- stats::pnorm(x, mean = mean[1], sd = sd[1])
-  py <- stats::pnorm(y, mean = mean[2], sd = sd[2])
+  px <- stats::pnorm(x, mean = mu[1], sd = sd[1])
+  py <- stats::pnorm(y, mean = mu[2], sd = sd[2])
   # convert to weibull, and return dataframe
   data.frame(
     x = stats::qweibull(px, shape = shape_x, scale = scale_x),

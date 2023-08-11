@@ -4,53 +4,24 @@
 
 #' Fit power law + weibull using loglikelihood fitting
 #'
-#' @md
 #' @description
 #' Fit a power law distribution plus a Weibull shape parameter to a series
-#' of test data, using the log-likelihood method.
+#' of test data (x, y), using the log-likelihood method.
 #'
-#' The parameter \eqn{y} (for example, root tensile strength) is assumed to be
-#' Weibull distributed, i.e. the probability \eqn{p} of measurement \eqn{(x, y)}
-#' occuring is:
-#'
-#' \deqn{p(x, y) = \frac{\kappa}{\lambda}
-#' \left(\frac{y}{\lambda}\right)^{\kappa-1}
-#' \exp\left[-\left(\frac{y}{\lambda}\right)^\kappa\right]}
-#'
-#' The weibull scale parameter \eqn{lambda} may scale with parameter \eqn{x}
-#' (for example, root diameter) according to a lower law:
-#'
-#' \deqn{\lambda = \lambda_0 \left(\frac{x}{x_0}\right)^\beta}
-#'
-#' Using the definition of the mean of the Weibull distribution, the scaling
-#' parameter for the best power-law fit (\eqn{y_0}) can be expressed as:
-#'
-#' \deqn{y_0 = \lambda_0 \Gamma\left(1 + \frac{1}{\kappa}\right)}
-#'
-#' where \eqn{\Gamma()} is the gamma function.
+#' The variation in the data, defined as the ratio (y/y_fit) where y_fit is
+#' predicted using a power law fit, is assumed to be Weibull distribution
+#' with a mean of 1 and a to be fitted shape parameter.'
 #'
 #' To find the best fitting parameters for the power law, the probability of
-#' all measurements must be maximised. Using a log-transform, to find the best
-#' values of parameters \eqn{\beta}, \eqn{\lambda_0} and \eqn{\kappa}, we want
-#' to optimize:
-#'
-#' \deqn{\text{minimize } -\sum \log p
-#' \qquad \sim \qquad
-#' \text{maximize } \prod p}
+#' all measurements is maximised.
 #'
 #' Measurements may be weighted according to their x-values in the form:
-#'
-#' \deq{p_{weighted} = p^{weights}}
-#'
-#' where \eqn{\text{weight}} is the weighting for each measured point. Given
+#' probability_weigthed = probability_{x,y}^weights, where `weights` is the
+#' vector with weighting for each measured point. Given
 #' that most biomechanical test relatively few thick roots, but thick roots
 #' have a large effect on the calculated reinforcement, I suggest weighting
-#' by the cross-sectional area, i.e. \eqn{weight = x^2}.
+#' by the cross-sectional area, `weights = x^2`.
 #'
-#' The function returns the optimal fit parameters: multiplier \eqn{y_0},
-#' power coefficient \eqn{\beta} and weibull shape parameter \eqn{\kappa}
-#' that describe the most likely (i.e. best) power law fit with
-#' Weibull distribution.
 #'
 #' Function uses the function `optim()` from the package `stats` to conduct
 #' the optimalisation.
@@ -155,9 +126,18 @@ power_weibull_likelihood <- function(
 }
 
 
-#' Jac
+#' Derivative of function `power_weibull_likelihood()`
 #'
+#' @description
+#' Generates the derivative of the results of the function
+#' `power_weibull_likelihood()` with respect to its input argument `par`.
+#'
+#' Function is vectorised.
+#'
+#' @inheritParams power_weibull_likelihood
+#' @return vector with derivatives with respect to `par`
 #' @examples
+#' # Compare analytical and numberical jacobians
 #' x <- seq(1, 10, l = 51)
 #' y <- 5*x^(0.5) + runif(length(x))
 #' lx <- log(x)
@@ -184,7 +164,12 @@ power_weibull_likelihood <- function(
 #' J
 #' J2
 #'
-power_weibull_likelihood_jacobian <- function(par, lx, ly, weights = 1) {
+power_weibull_likelihood_jacobian <- function(
+    par,
+    lx,
+    ly,
+    weights = rep(1, length(lx))
+) {
   # split param
   la <- par[1]
   b <- par[2]

@@ -21,6 +21,7 @@
 #'   `kappaeps`), tensile strength fitting (power law parameters `tru0` and
 #'   `betat`, Weibull shape parameter `kappat`) and copula fitting (
 #'   correlation coefficient `rho`)
+#' @export
 #' @examples
 #' # generate data
 #' n <- 101
@@ -59,8 +60,8 @@ biomech_fit <- function(
     epsru,
     tru,
     dr0 = 1,
-    weights_power = dr^2,
-    weights_copula = dr^2
+    weights_power = length(dr)*dr^2/sum(dr^2),
+    weights_copula = length(dr)*dr^2/sum(dr^2)
 ) {
   # fit power-law to ultimate strain data
   ft_epsru <- power_weibull_fit(dr/dr0, epsru, weights = weights_power)
@@ -116,6 +117,7 @@ biomech_fit <- function(
 #' @param dr0 root reference diameter
 #' @return dataframe with root diameters (`dr`), tensile strain to peak
 #' (`epsru`) and tensile strength (`tru`)
+#' @export
 #' @examples
 #' # generate data
 #' dr <- seq(2, 9, l = 100)
