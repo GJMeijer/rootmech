@@ -32,7 +32,9 @@
 #' values because the intial parameter guesses are too far removed from the
 #' solution.
 #'
-#' @param x measured x-values (e.g. root diameters)
+#' @param x measured x-values (e.g. root diameters). These values are assumed
+#'   to be already normalised by a reference value to ensure a unitless
+#'   parameter.
 #' @param y measured y-values (e.g. root tensile strength)
 #' @param weights weighting for each measurement. Default = 1, but a strong
 #'   case can be made for weighting with `weights = x^2` because of the
