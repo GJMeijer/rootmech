@@ -9,6 +9,8 @@ rootcount_fit(
   ns,
   xmin = min(x, na.rm = TRUE),
   xmax = max(x, na.rm = TRUE),
+  n0 = 0,
+  fixed = rep(NA, 2 * ns - 1),
   weights = rep(1, length(x)),
   par0 = NULL
 )
@@ -21,6 +23,14 @@ rootcount_fit(
 \item{xmin, xmax}{minimum and maximum values of `x` to use in the fit.
 By default, `xmin = min(x)` and `xmax = max(x)` since this will maximise
 the probability. These values may however be overwritten if required.}
+
+\item{n0}{number of extra optional segments breakpoint positions to include
+in generating an initial guess}
+
+\item{fixed}{vector with `2*ns + 1` elements, with values of the
+fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
+that should be fixed and therefore not fitted. Values that are `NA` will
+be fitted while any non-NA will be held constant}
 
 \item{weights}{vector with weights for each observation. The individual
 probabilities are raised to the power `weights`. By default, all
@@ -39,10 +49,34 @@ a list with the loglikelihood (field `loglikelihood`) and a
 }
 \description{
 Fit a C^0 continuous, multisegment power-law probability distribution to a
-sset of observations `x`. Observations can be weighted if required.
+set of observations `x`. Observations can be weighted if required.
+
+The fit is sensitive to the initial guess. An initial guess is generated
+by the function `rootcount_initialguess()`, see documentation for more
+details. The function generates `ns - 1 + n0` optinal breakpoints and fits
+with fixed breakpoint positions. The combination of breakpoints that yields
+the best likelihood is then used as an initial guess for the 'main' fitting
+process.
 }
 \examples{
+# test fit
 x <- rweibull(100, 4, 6)
 rootcount_fit(x, 2)
+
+# multiple segments
+x <- c(
+  rweibull(25, shape = 4, scale = 1),
+  rweibull(25, shape = 6, scale = 3),
+  rweibull(25, shape = 12, scale = 10)
+)
+ft1 <- rootcount_fit(x, 3)
+rootcount_cumulative_plot(x, ft1$par)
+# multiple segments, with multiple initial guesses
+ft2 <- rootcount_fit(x, 3, n0 = 5)
+rootcount_cumulative_plot(x, ft2$par)
+
+# test fixed argument
+ft3 <- rootcount_fit(x, 3, fixed = c(3, 4, 0.1, NA, 2.5))
+rootcount_cumulative_plot(x, ft3$par)
 
 }

@@ -7,7 +7,9 @@
 power_weibull_fit(x, y, weights = rep(1, length(x)), guess = NULL)
 }
 \arguments{
-\item{x}{measured x-values (e.g. root diameters)}
+\item{x}{measured x-values (e.g. root diameters). These values are assumed
+to be already normalised by a reference value to ensure a unitless
+parameter.}
 
 \item{y}{measured y-values (e.g. root tensile strength)}
 

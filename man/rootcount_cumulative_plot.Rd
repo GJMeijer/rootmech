@@ -6,7 +6,7 @@
 \usage{
 rootcount_cumulative_plot(
   x,
-  dfp,
+  df,
   n = 101,
   xlab = expression("Root diameter" ~ d[r] ~ "[mm]"),
   ylab = "Cumulative probability density [-]",
@@ -19,7 +19,7 @@ rootcount_cumulative_plot(
 \arguments{
 \item{x}{vector with observations}
 
-\item{dfp}{dataframe with fitting values per segment. For more information,
+\item{df}{dataframe with fitting values per segment. For more information,
 see documentation in output argument in function `rootcount_fit()`}
 
 \item{n}{number of points to use for fitting line in each segment}

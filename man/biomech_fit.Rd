@@ -9,8 +9,8 @@ biomech_fit(
   epsru,
   tru,
   dr0 = 1,
-  weights_power = dr^2,
-  weights_copula = dr^2
+  weights_power = length(dr) * dr^2/sum(dr^2),
+  weights_copula = length(dr) * dr^2/sum(dr^2)
 )
 }
 \arguments{

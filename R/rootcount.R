@@ -2,13 +2,26 @@
 #'
 #' @description
 #' Fit a C^0 continuous, multisegment power-law probability distribution to a
-#' sset of observations `x`. Observations can be weighted if required.
+#' set of observations `x`. Observations can be weighted if required.
+#'
+#' The fit is sensitive to the initial guess. An initial guess is generated
+#' by the function `rootcount_initialguess()`, see documentation for more
+#' details. The function generates `ns - 1 + n0` optinal breakpoints and fits
+#' with fixed breakpoint positions. The combination of breakpoints that yields
+#' the best likelihood is then used as an initial guess for the 'main' fitting
+#' process.
 #'
 #' @param x vector with observations
 #' @param ns number of segments to use
 #' @param xmin,xmax minimum and maximum values of `x` to use in the fit.
 #'   By default, `xmin = min(x)` and `xmax = max(x)` since this will maximise
 #'   the probability. These values may however be overwritten if required.
+#' @param n0 number of extra optional segments breakpoint positions to include
+#'   in generating an initial guess
+#' @param fixed vector with `2*ns + 1` elements, with values of the
+#'   fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
+#'   that should be fixed and therefore not fitted. Values that are `NA` will
+#'   be fitted while any non-NA will be held constant
 #' @param weights vector with weights for each observation. The individual
 #'   probabilities are raised to the power `weights`. By default, all
 #'   observations are weighted equally (`weights = 1`)
@@ -21,36 +34,59 @@
 #'   the power-law coefficient (`power`) and the total probability in the
 #'   segment (`total`).
 #' @examples
+#' # test fit
 #' x <- rweibull(100, 4, 6)
 #' rootcount_fit(x, 2)
 #'
+#' # multiple segments
 #' x <- c(
 #'   rweibull(25, shape = 4, scale = 1),
 #'   rweibull(25, shape = 6, scale = 3),
-#'   rweibull(25, shape = 12, scale = 6)
+#'   rweibull(25, shape = 12, scale = 10)
 #' )
 #' ft1 <- rootcount_fit(x, 3)
 #' rootcount_cumulative_plot(x, ft1$par)
-#'
-#' ft2 <- rootcount_fit(x, 3, fixed = c(2, 5, 0.4, NA, 0.3))
+#' # multiple segments, with multiple initial guesses
+#' ft2 <- rootcount_fit(x, 3, n0 = 5)
 #' rootcount_cumulative_plot(x, ft2$par)
+#'
+#' # test fixed argument
+#' ft3 <- rootcount_fit(x, 3, fixed = c(3, 4, 0.1, NA, 2.5))
+#' rootcount_cumulative_plot(x, ft3$par)
 #'
 rootcount_fit <- function(
     x,
     ns,
     xmin = min(x, na.rm = TRUE),
     xmax = max(x, na.rm = TRUE),
+    n0 = 0,
+    fixed = rep(NA, 2*ns - 1),
     weights = rep(1, length(x)),
-    par0 = NULL,
-    fixed = rep(NA, 2*ns - 1)
+    par0 = NULL
 ) {
+  # remove NA values from array
+  x <- x[!is.na(x)]
+  # return errors
+  if (any(x > xmax)) stop("Observations beyond domain, some x>xmax")
+  if (any(x < xmin)) stop("Observations beyond domain, some x<xmin")
+  if (length(par0) != sum(is.na(fixed))) {
+    stop("Length of initial guess vector `par0` not compatible with number of
+      `NA` values in `fixed`argument")
+  }
+  # generate
   if (any(is.na(fixed))) {
-    # fit
-    # remove NA values from array
-    x <- x[!is.na(x)]
+    # fit - only if not all parameters already fixed
     # initial guess
     if (is.null(par0)) {
-      par0 <- rootcount_initialguess(x, ns, fixed = fixed)
+      par0 <- rootcount_initialguess(
+        x,
+        ns,
+        xmin = xmin,
+        xmax = xmax,
+        n0 = n0,
+        fixed = fixed,
+        weights = weights
+      )
     }
     # cases
     if (ns == 1) {
@@ -96,8 +132,8 @@ rootcount_fit <- function(
       b <- parall[ns:(2*ns - 1)]
       pt <- rootcount_multiplier(xb, b, xmin, xmax)
     }
-  # all parameters known/fixed
   } else {
+    # all parameters known/fixed
     if (ns == 1) {
       L <- rootcount_loglikelihood_single(
         fixed, x, xmin = xmin, xmax = xmax, weights = weights)
@@ -115,7 +151,7 @@ rootcount_fit <- function(
   }
   # return output
   list(
-    loglikelihood = sol$value,
+    loglikelihood = L,
     par = data.frame(
       xmin = c(xmin, xb),
       xmax = c(xb, xmax),
@@ -123,6 +159,92 @@ rootcount_fit <- function(
       total = pt/sum(pt)
     )
   )
+}
+
+
+#' Initial guess for multisegment power-law fitting
+#'
+#' @description
+#' Generates a single initial guess for multisegment power-law fitting.
+#' The number of optional breakpoints is `ns - 1 + n0`, which are equally
+#' spaced along the domain `xmin` to `xmax`. A fit is made for each of the
+#' combinations of the breakpoints (breakpoints are fixed in this analysis, so
+#' only power-laws are fitted), assuming all power-law coefficients are equal
+#' to zero.
+#'
+#' The combinations of breakpoints with the largest likelihood score is
+#' returned. This will serve as a decent initial guess for the root count
+#' fitting function, in which the exact locations of the breakpoints may also
+#' vary.
+#'
+#' Larger values of `n0` will probably result in a better guess. This however
+#' also results in longer runtimes, as more options need to be evaluated.
+#'
+#' @inheritParams rootcount_fit
+#' @return a vector with an initial guess
+#' @examples
+#' rootcount_initialguess(seq(1.2, 5.6, l = 50), 3)
+#' rootcount_initialguess(seq(1.2, 5.6, l = 50), 3, n0 = 3)
+#'
+rootcount_initialguess <- function(
+    x,
+    ns,
+    xmin = min(x, na.rm = TRUE),
+    xmax = max(x, na.rm = TRUE),
+    n0 = 0,
+    fixed = rep(NA, 2*ns - 1),
+    weights = rep(1, length(x))
+) {
+  # single segment - only fitting coefficient is power-coefficient
+  if (ns == 1) {
+    if (is.na(fixed[1])) {
+      par0 <- 0
+    } else {
+      par0 <- fixed[1]
+    }
+    # multiple segments
+  } else {
+    # matrix with breakpoints options
+    fixed_xb <- fixed[1:(ns - 1)]
+    if (any(is.na(fixed_xb))) {
+      # some breakpoints unknown - generate options
+      xb <- breakpoint_options(
+        ns - 1,
+        xmin,
+        xmax,
+        fixed = fixed_xb,
+        n0 = n0
+      )
+      xb <- matrix(xb[, is.na(fixed_xb)], nrow = nrow(xb))
+      # number of unfixed power-coefficients
+      nb_unfixed <- sum(is.na(fixed[ns:(2*ns - 1)]))
+      # fit for each of the breakpoint options
+      Lopts <- apply(
+        xb,
+        1,
+        function(xbi) {
+          rootcount_fit(
+            x, ns,
+            xmin = xmin, xmax = xmax,
+            weights = weights,
+            par0 = rep(0, nb_unfixed),
+            fixed = c(xbi, fixed[ns:(2*ns - 1)])
+          )
+        }
+      )
+      # find option with minimum loglikelihood score
+      i <- which.max(sapply(Lopts, function(x) x$loglikelihood))
+      # vector with all initial parameters
+      parall <- c(Lopts[[i]]$par$xmin[2:ns], Lopts[[i]]$par$power)
+    } else {
+      # all breakpoints fixed - return simple guess - all non-fixed powers = 0
+      parall <- rep(0, 2*ns + 1)
+    }
+    # return vector with non-fixed values
+    par0 <- parall[is.na(fixed)]
+  }
+  # return guess
+  par0
 }
 
 
@@ -196,7 +318,7 @@ power_integrate_jacobian <- function(b, x1, x2) {
 
 #' Combine fitting parameters and known parameters into single vector
 #'
-#' @desciption
+#' @description
 #' Generate a single vector with fitting parameters and known ('fixed')
 #' parameters for root count fitting.
 #'
@@ -536,45 +658,6 @@ rootcount_loglikelihood_jacobian <- function(
 }
 
 
-#' Initial guess for multisegment power-law fitting
-#'
-#' @description
-#' Generates a single initial guess for multisegment power-law
-#' fitting. The breakpoints are equally distributed between `min(x)` and
-#' `max(x)`, while all power-law coefficients are assumed zero
-#'
-#' @inheritParams rootcount_fit
-#' @return a vector with an initial guess
-#' @examples
-#' rootcount_initialguess(seq(1.2, 5.6, l = 50), 3)
-#'
-rootcount_initialguess <- function(x, ns, fixed = rep(NA, 2*ns - 1)) {
-  if (ns == 1) {
-    # single segment - only fitting coefficient is power-coefficient
-    if (is.na(fixed[1])) {
-      0
-    } else {
-      fixed[1]
-    }
-  } else {
-    # multiple segments
-    # breakpoints
-    fixed_xb <- fixed[1:(ns - 1)]
-    xb <- as.vector(breakpoint_options(
-      ns - 1,
-      min(x, na.rm = TRUE),
-      max(x, na.rm = TRUE),
-      fixed = fixed_xb,
-      n0 = 0
-    ))[is.na(fixed_xb)]
-    # power coefficients
-    b <- rep(0, sum(is.na(fixed[ns:(2*ns - 1)]) == TRUE))
-    # return
-    c(xb, b)
-  }
-}
-
-
 #' Generate contraints for `rootcount_fit()` optimalisation
 #'
 #' @description
@@ -790,9 +873,11 @@ rootcount_density_fitted <- function(dfp, n = 101) {
 #'
 #' @param n number of breakpoints to select
 #' @param xmin,xmax min and max value of domain
-#' @param fixed values of fixed breakpoints
 #' @param n0 total number of extra optional locations
+#' @param fixed array with values of fixed breakpoints. Should contain `NA` for
+#'   each breakpoint that is unknown
 #' @return matrix with breakpoint options
+#' @export
 #' @examples
 #' # input
 #' n <- 3
@@ -806,7 +891,7 @@ rootcount_density_fitted <- function(dfp, n = 101) {
 #' # fix at end
 #' breakpoint_options(n, xmin, xmax, fixed = c(NA, NA, 6), n0 = 4)
 #'
-breakpoint_options <- function(n, xmin, xmax, fixed = rep(NA, n), n0 = 4) {
+breakpoint_options <- function(n, xmin, xmax, n0 = 4, fixed = rep(NA, n)) {
   if (all(!is.na(fixed))) {
     cmb <- matrix(fixed, nrow = 1)
   } else {

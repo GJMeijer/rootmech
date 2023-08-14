@@ -7,6 +7,9 @@
 #' fitting function in R.
 #'
 #' @inheritParams power_weibull_fit
+#' @param par0 vector with initial guess for the power-law multiplier and
+#'   power coefficient. If not defined, a guess is made best on linear
+#'   fitting of the log-transformed `x` and `y` data.
 #' @return dataframe with R^2 value of best fit (field `r2`) as well as the
 #'   multiplier (`multiplier`) and power coefficient (`power`)
 #' @export
@@ -28,16 +31,16 @@ power_r2_fit <- function(
 ) {
   # generate initial guess if required
   if (is.null(par0)) {
-    ft0 <- lm(log(y) ~ log(x), weights = weights)
-    par0 <- as.vector(c(exp(coef(ft0)[1]), coef(ft0)[2]))
+    ft0 <- stats::lm(log(y) ~ log(x), weights = weights)
+    par0 <- as.vector(c(exp(stats::coef(ft0)[1]), stats::coef(ft0)[2]))
   }
   # non-linear least-squares fitting
-  ft <- nls(
+  ft <- stats::nls(
     y ~ a*x^b,
     start = list(a = par0[1], b = par0[2])
   )
   # get r2 value of fit
-  yp <- predict(ft)
+  yp <- stats::predict(ft)
   r2 <- 1 - sum((yp - y)^2)/sum((y - mean(y))^2)
   # return dataframe with key data
   data.frame(

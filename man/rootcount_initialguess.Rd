@@ -4,22 +4,58 @@
 \alias{rootcount_initialguess}
 \title{Initial guess for multisegment power-law fitting}
 \usage{
-rootcount_initialguess(x, ns)
+rootcount_initialguess(
+  x,
+  ns,
+  xmin = min(x, na.rm = TRUE),
+  xmax = max(x, na.rm = TRUE),
+  n0 = 0,
+  fixed = rep(NA, 2 * ns - 1),
+  weights = rep(1, length(x))
+)
 }
 \arguments{
 \item{x}{vector with observations}
 
 \item{ns}{number of segments to use}
+
+\item{xmin, xmax}{minimum and maximum values of `x` to use in the fit.
+By default, `xmin = min(x)` and `xmax = max(x)` since this will maximise
+the probability. These values may however be overwritten if required.}
+
+\item{n0}{number of extra optional segments breakpoint positions to include
+in generating an initial guess}
+
+\item{fixed}{vector with `2*ns + 1` elements, with values of the
+fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
+that should be fixed and therefore not fitted. Values that are `NA` will
+be fitted while any non-NA will be held constant}
+
+\item{weights}{vector with weights for each observation. The individual
+probabilities are raised to the power `weights`. By default, all
+observations are weighted equally (`weights = 1`)}
 }
 \value{
 a vector with an initial guess
 }
 \description{
-Generates a single initial guess for multisegment power-law
-fitting. The breakpoints are equally distributed between `min(x)` and
-`max(x)`, while all power-law coefficients are assumed zero
+Generates a single initial guess for multisegment power-law fitting.
+The number of optional breakpoints is `ns - 1 + n0`, which are equally
+spaced along the domain `xmin` to `xmax`. A fit is made for each of the
+combinations of the breakpoints (breakpoints are fixed in this analysis, so
+only power-laws are fitted), assuming all power-law coefficients are equal
+to zero.
+
+The combinations of breakpoints with the largest likelihood score is
+returned. This will serve as a decent initial guess for the root count
+fitting function, in which the exact locations of the breakpoints may also
+vary.
+
+Larger values of `n0` will probably result in a better guess. This however
+also results in longer runtimes, as more options need to be evaluated.
 }
 \examples{
 rootcount_initialguess(seq(1.2, 5.6, l = 50), 3)
+rootcount_initialguess(seq(1.2, 5.6, l = 50), 3, n0 = 3)
 
 }

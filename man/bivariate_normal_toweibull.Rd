@@ -9,7 +9,7 @@ bivariate_normal_toweibull(
   y,
   shape_x,
   shape_y,
-  mean = c(0, 0),
+  mu = c(0, 0),
   sd = c(1, 1),
   scale_x = 1/gamma(1 + 1/shape_x),
   scale_y = 1/gamma(1 + 1/shape_y)
@@ -19,6 +19,8 @@ bivariate_normal_toweibull(
 \item{x, y}{positions in bivariate normal coordinates}
 
 \item{shape_x, shape_y}{Weibull shape parameters for x and y}
+
+\item{mu}{vector with means for x and y}
 
 \item{sd}{vector with standard deviations for x and y}
 

@@ -6,7 +6,7 @@
 \usage{
 rootcount_density_plot(
   x,
-  dfp,
+  df,
   bins = 20,
   n = 101,
   xlab = expression("Root diameter" ~ d[r] ~ "[mm]"),
@@ -20,7 +20,7 @@ rootcount_density_plot(
 \arguments{
 \item{x}{vector with observations}
 
-\item{dfp}{dataframe with fitting values per segment. For more information,
+\item{df}{dataframe with fitting values per segment. For more information,
 see documentation in output argument in function `rootcount_fit()`}
 
 \item{bins}{number of equally spaced bins to use to plot observed data}
@@ -58,7 +58,7 @@ x <- c(
   rweibull(50, shape = 12, scale = 6)
 )
 
-ft <- rootcount_fit(x, 7)
+ft <- rootcount_fit(x, 6)
 
 rootcount_density_plot(x, ft$par, bins = 30)
 rootcount_cumulative_plot(x, ft$par)

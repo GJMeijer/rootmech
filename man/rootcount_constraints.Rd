@@ -4,7 +4,7 @@
 \alias{rootcount_constraints}
 \title{Generate contraints for `rootcount_fit()` optimalisation}
 \usage{
-rootcount_constraints(ns, xmin, xmax)
+rootcount_constraints(ns, xmin, xmax, fixed = rep(NA, 2 * ns - 1))
 }
 \arguments{
 \item{ns}{number of segments to use}
@@ -12,6 +12,11 @@ rootcount_constraints(ns, xmin, xmax)
 \item{xmin, xmax}{minimum and maximum values of `x` to use in the fit.
 By default, `xmin = min(x)` and `xmax = max(x)` since this will maximise
 the probability. These values may however be overwritten if required.}
+
+\item{fixed}{vector with `2*ns + 1` elements, with values of the
+fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
+that should be fixed and therefore not fitted. Values that are `NA` will
+be fitted while any non-NA will be held constant}
 }
 \value{
 a list with the constraint matrix (`ui`) and vector (`ci`)

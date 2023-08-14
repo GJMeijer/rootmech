@@ -9,7 +9,8 @@ rootcount_loglikelihood_jacobian(
   x,
   xmin = min(x, na.rm = TRUE),
   xmax = max(x, na.rm = TRUE),
-  weights = rep(1, length(x))
+  weights = rep(1, length(x)),
+  fixed = rep(length(par), NA)
 )
 }
 \arguments{
@@ -26,6 +27,11 @@ the probability. These values may however be overwritten if required.}
 \item{weights}{vector with weights for each observation. The individual
 probabilities are raised to the power `weights`. By default, all
 observations are weighted equally (`weights = 1`)}
+
+\item{fixed}{vector with `2*ns + 1` elements, with values of the
+fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
+that should be fixed and therefore not fitted. Values that are `NA` will
+be fitted while any non-NA will be held constant}
 }
 \value{
 a scalar containing the derivatives for each value in fitting vector
