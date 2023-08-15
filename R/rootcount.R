@@ -33,6 +33,7 @@
 #'   Each segment is defined using the lower and upper x-limit (`xmin`, `xmax`),
 #'   power-law multiplier (`multiplier`) and power-law coefficient (`power`)
 #'   and the total probability in the segment (`total`).
+#' @export
 #' @examples
 #' # test fit
 #' x <- rweibull(100, 4, 6)
@@ -856,6 +857,7 @@ rootcount_loglikelihood_single_jacobian <- function(
 #' @inheritParams rootcount_fit
 #' @return a dataframe with x-values (`x`) and the cumulative probability
 #' density (`y`)
+#' @export
 #' @examples
 #' rootcount_cumulative_observations(seq(2, 5, l = 10))
 #'
@@ -881,6 +883,7 @@ rootcount_cumulative_observations <- function(x) {
 #' @return a dataframe with x-values (`x`), the cumulative probability
 #' density (`y`), and an identifier for each bundle (`bundle_id`, integers
 #' 1, 2, 3 etc)
+#' @export
 #' @examples
 #' ft <- rootcount_fit(seq(2, 6, l = 51), 2)
 #' rootcount_cumulative_fitted(ft$par, n = 10)
@@ -891,7 +894,7 @@ rootcount_cumulative_fitted <- function(par, n = 101) {
   par$ymax <- cumsum(par$total)
   par$ymin <- c(0, par$ymax)[1:nrow(par)]
   # get all x-coordinates
-  df <- expand.grid.df(data.frame(s = seq(0, 1, l = n)), par)
+  df <- expand_grid_df(data.frame(s = seq(0, 1, l = n)), par)
   df$x <- df$xmin + (df$xmax - df$xmin)*df$s
   # get y-coordinates
   df$y <- with(df, ymin + (ymax - ymin)*ifelse(
@@ -918,6 +921,7 @@ rootcount_cumulative_fitted <- function(par, n = 101) {
 #' @return a dataframe with x-values (`x`), the cumulative probability
 #' density (`y`), and an identifier for each bundle (`bundle_id`, integers
 #' 1, 2, 3 etc)
+#' @export
 #' @examples
 #' ft <- rootcount_fit(seq(2, 6, l = 51), 2)
 #' df <- rootcount_density_fitted(ft$par, n = 101)
@@ -933,7 +937,7 @@ rootcount_density_fitted <- function(par, n = 101) {
     total*(1 + power)/(xmax^(power + 1) - xmin^(power + 1))
   ))
   # get all x-coordinates
-  df <- expand.grid.df(data.frame(s = seq(0, 1, l = n)), par)
+  df <- expand_grid_df(data.frame(s = seq(0, 1, l = n)), par)
   df$x <- df$xmin + (df$xmax - df$xmin)*df$s
   # get y-coordinates
   df$y <- with(df, alpha*x^power)
@@ -1003,4 +1007,44 @@ rootcount_density_prediction <- function(x, par) {
   i <- cut(x, xb, labels = FALSE)
   # probability densities
   par$multiplier[i]*x^par$power[i]
+}
+
+
+#' Generate random root diameters based on multisegment power-law probabilities
+#'
+#' @description
+#' Generate random root diameter observations based on a multisegment power-law
+#' fit result.
+#'
+#' @inheritParams rootcount_density_fitted
+#' @param n number of random observations required
+#' @return a vector with randomly drawn observations
+#' @export
+#' @examples
+#' # generate some data and fit
+#' x1 <- rweibull(100, shape = 4, scale = 6)
+#' par <- rootcount_fit(x1, 2)$par
+#'
+#' # draw random values from fit
+#' x2 <- rootcount_random(1000, par)
+#'
+#' # plot cumulative data
+#' c1 <- seq(0, 1, l = length(x1))
+#' c2 <- seq(0, 1, l = length(x2))
+#' plot(sort(x1), c1)
+#' lines(sort(x2), c2, "l", col = "red")
+#'
+rootcount_random <- function(n, par) {
+  # draw uniform distribution -> cumulative
+  p <- runif(n, min = 0, max = 1)
+  # find segment
+  i <- cut(p, c(-Inf, cumsum(par$total)), labels = FALSE)
+  # cumulative probability at the start of eachs segment
+  pc <- c(0, cumsum(par$total))
+  # convert power-law cumulative to observations
+  with(par, ifelse(
+    is_near(power[i], -1),
+    xmin[i]*(xmax[i]/xmin[i])^((p - pc[i])/total[i]),
+    ((p - pc[i])/total[i]*(xmax[i]^(power[i] + 1) - xmin[i]^(power[i] + 1)) + xmin[i]^(power[i] + 1))^(1/(power[i] + 1))
+  ))
 }

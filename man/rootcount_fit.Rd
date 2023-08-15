@@ -44,8 +44,8 @@ If not defined, a simple guess is made}
 a list with the loglikelihood (field `loglikelihood`) and a
   dataframe (field `par`) with the fitting results for each segment.
   Each segment is defined using the lower and upper x-limit (`xmin`, `xmax`),
-  the power-law coefficient (`power`) and the total probability in the
-  segment (`total`).
+  power-law multiplier (`multiplier`) and power-law coefficient (`power`)
+  and the total probability in the segment (`total`).
 }
 \description{
 Fit a C^0 continuous, multisegment power-law probability distribution to a
@@ -65,9 +65,9 @@ rootcount_fit(x, 2)
 
 # multiple segments
 x <- c(
-  rweibull(25, shape = 4, scale = 1),
-  rweibull(25, shape = 6, scale = 3),
-  rweibull(25, shape = 12, scale = 10)
+  rweibull(100, shape = 4, scale = 1),
+  rweibull(50, shape = 6, scale = 3),
+  rweibull(10, shape = 12, scale = 6)
 )
 ft1 <- rootcount_fit(x, 3)
 rootcount_cumulative_plot(x, ft1$par)

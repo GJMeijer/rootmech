@@ -92,6 +92,7 @@ copula_gaussian_fit <- function(
 #' @inheritParams copula_gaussian_fit
 #' @param rho correlation coefficient to fit
 #' @return weighted loglikeihood value
+#' @export
 copula_gaussian_likelihood <- function(
     rho,
     px,
@@ -113,6 +114,7 @@ copula_gaussian_likelihood <- function(
 #'
 #' @inheritParams copula_gaussian_likelihood
 #' @return derivative of `copula_gaussian_likelihood()` with respect to `rho`
+#' @export
 #' @examples
 #' # Test: compare analytical with numerical jacobian
 #' rho <- 0.6

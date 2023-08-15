@@ -109,7 +109,7 @@ bivariate_normal_predictioninterval <- function(
   # angles
   theta <- seq(0, 2*pi, l = n + 1)
   # combinations
-  df <- expand.grid.df(
+  df <- expand_grid_df(
     data.frame(theta = theta),
     data.frame(confidence = confidence, chisq = chisq)
   )

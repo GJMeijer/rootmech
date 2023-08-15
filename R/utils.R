@@ -10,6 +10,7 @@
 #' @param tol tolerance of comparison (optional)
 #' @return a logical array (same size as input arrays) with
 #'   element-wise comparison of `x` and `y``
+#' @export
 #' @examples
 #' sqrt(2)^2 == 2
 #' is_near(sqrt(2)^2, 2)
@@ -33,11 +34,12 @@ is_near <- function (x, y, tol = .Machine$double.eps^0.5) {
 #'
 #' @param ... input dataframes
 #' @return dataframe with all combinations of rows
+#' @export
 #' @examples
 #' df1 <- data.frame(a = c(1, 2), b = c(3, 4))
 #' df2 <- data.frame(d = c(1, 2, 3), e = c(4, 5, 6), f = c(7, 8, 9))
-#' expand.grid.df(df1, df2)
+#' expand_grid_df(df1, df2)
 #'
-expand.grid.df <- function(...) {
+expand_grid_df <- function(...) {
   Reduce(function(...) merge(..., by=NULL), list(...))
 }

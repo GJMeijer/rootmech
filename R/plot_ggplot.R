@@ -91,7 +91,7 @@ power_weibull_plot <- function(
         mlower = stats::qweibull(0.5 - 0.5*confidence, shape = shape, scale = 1/gamma(1 + 1/shape)),
         mupper = stats::qweibull(0.5 + 0.5*confidence, shape = shape, scale = 1/gamma(1 + 1/shape))
       )
-      df_conf <- expand.grid.df(df_fit, df_c)
+      df_conf <- expand_grid_df(df_fit, df_c)
       df_conf$lower <- df_conf$y*df_conf$mlower
       df_conf$upper <- df_conf$y*df_conf$mupper
       # add to plot

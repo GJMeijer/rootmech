@@ -4,10 +4,10 @@
 \alias{rootcount_density_fitted}
 \title{Generate a probability density curve for multisegment fit}
 \usage{
-rootcount_density_fitted(dfp, n = 101)
+rootcount_density_fitted(par, n = 101)
 }
 \arguments{
-\item{dfp}{dataframe with fitting parameters per power-law segment. This
+\item{par}{dataframe with fitting parameters per power-law segment. This
 is the dataframe returned by the function `rootcount_fit` as the field
 `par` in the outputted list}
 
