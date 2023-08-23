@@ -7,7 +7,7 @@
 #' regression function in R.
 #'
 #' @inheritParams power_weibull_fit
-#' @param par0 vector with initial guess for the power-law multiplier and
+#' @param guess vector with initial guess for the power-law multiplier and
 #'   power coefficient. If not defined, a guess is made best on linear
 #'   fitting of the log-transformed `x` and `y` data.
 #' @return dataframe with the unadjusted R^2 value of best fit (field `r2`),
@@ -30,17 +30,17 @@ power_nls_fit <- function(
     x,
     y,
     weights = rep(1, length(x)),
-    par0 = NULL
+    guess = NULL
 ) {
   # initial guess, based on log-log fitting
-  if (is.null(par0)) {
+  if (is.null(guess)) {
     ft0 <- stats::lm(log(y) ~ log(x), weights = weights)
-    par0 <- as.vector(c(exp(ft0$coefficients[1]), ft0$coefficients[2]))
+    guess <- as.vector(c(exp(ft0$coefficients[1]), ft0$coefficients[2]))
   }
   # non-linear least squares fitting
   ft1 <- stats::nls(
     y ~ a*x^b,
-    start = list(a = par0[1], b = par0[2])
+    start = list(a = guess[1], b = guess[2])
   )
   par <- as.vector(coef(ft1))
   # residuals and variance

@@ -172,6 +172,164 @@ rootcount_fit <- function(
 }
 
 
+#' Plot observed and fitted cumulative density of root distributions
+#'
+#' @description
+#' Plot the observed and multisegment power-law fit for the cumulative density
+#' distribution of variable `x`.
+#'
+#' Plots are generated using the ggplot2 package.
+#'
+#' @importFrom rlang .data
+#' @inheritParams power_weibull_plot
+#' @param x vector with observations
+#' @param par dataframe with fitting values per segment. For more information,
+#'   see documentation in output argument in function `rootcount_fit()`
+#' @param n number of points to use for fitting line in each segment
+#' @return ggplot object
+#' @export
+#' @examples
+#' x <- c(
+#'   rweibull(25, shape = 4, scale = 1),
+#'   rweibull(25, shape = 6, scale = 3),
+#'   rweibull(25, shape = 12, scale = 6)
+#' )
+#'
+#' ft <- rootcount_fit(x, 2)
+#'
+#' rootcount_cumulative_plot(x, ft$par)
+rootcount_cumulative_plot <- function(
+    x,
+    par,
+    n = 101,
+    xlab = expression("Root diameter"~d[r]~"[mm]"),
+    ylab = "Cumulative probability density [-]",
+    xlim = c(0, NA),
+    ylim = c(0, 1),
+    ticks = 7,
+    settings = plot_settings()
+) {
+  # cumulative trace - observations
+  df1 <- rootcount_cumulative_observations(x)
+  # cumulative trace - fit
+  df2 <- rootcount_cumulative_fitted(par, n = n)
+  # axes limits
+  xlims <- round_range(c(x, par$xmin), lim = xlim, ticks = ticks)
+  ylims <- round_range(c(0, 1), lim = ylim, ticks = ticks)
+  # plot
+  ggplot2::ggplot() +
+    ggplot2::theme_bw() +
+    ggplot2::geom_path(
+      data = df1,
+      ggplot2::aes(x = .data$x, y = .data$y),
+      color = settings$color_meas,
+      linetype = settings$linetype_meas,
+      linewidth = settings$linewidth_meas
+    ) +
+    ggplot2::geom_path(
+      data = df2,
+      ggplot2::aes(x = .data$x, y = .data$y),
+      color = settings$color_fit,
+      linetype = settings$linetype_fit,
+      linewidth = settings$linewidth_fit
+    ) +
+    ggplot2::xlab(xlab) +
+    ggplot2::ylab(ylab) +
+    ggplot2::scale_x_continuous(breaks = xlims$breaks) +
+    ggplot2::scale_y_continuous(breaks = ylims$breaks) +
+    ggplot2::coord_cartesian(
+      xlim = xlims$lim,
+      ylim = ylims$lim,
+      expand = FALSE
+    )
+}
+
+
+#' Plot observed and fitted root probability distributions
+#'
+#' @description
+#' Plot the observed and multisegment power-law fit for the probability density
+#' distribution of variable `x`. The observed data is binned using `bins`
+#' number of equal-width bins, and per bin the average probabilty density is
+#' calculated.
+#'
+#' Plots are generated using the ggplot2 package.
+#'
+#' @importFrom rlang .data
+#' @inheritParams rootcount_cumulative_plot
+#' @param bins number of equally spaced bins to use to plot observed data
+#' @return ggplot object
+#' @export
+#' @examples
+#' x <- c(
+#'   rweibull(50, shape = 4, scale = 1),
+#'   rweibull(50, shape = 6, scale = 3),
+#'   rweibull(50, shape = 12, scale = 6)
+#' )
+#'
+#' ft <- rootcount_fit(x, 6)
+#'
+#' rootcount_density_plot(x, ft$par, bins = 30)
+#' rootcount_cumulative_plot(x, ft$par)
+rootcount_density_plot <- function(
+    x,
+    par,
+    bins = 20,
+    n = 101,
+    xlab = expression("Root diameter"~d[r]~"[mm]"),
+    ylab = "Probability density [-]",
+    xlim = c(0, NA),
+    ylim = c(0, NA),
+    ticks = 7,
+    settings = plot_settings()
+) {
+  # cut - to get estimation of max density in bar
+  ct <- floor((x - min(x))/(max(x) - min(x))*bins) + 1
+  ct[ct > bins] <- bins
+  tb <- table(ct)
+  df1 <- data.frame(x = min(x) + (max(x) - min(x))*seq(0.5/bins, 1 - 0.5/bins, l = bins), n = 0)
+  df1$n[as.integer(row.names(tb))] <- as.vector(tb)
+  df1$y <- df1$n/length(x)/(max(x) - min(x))*bins
+  # fitted density curve
+  df2 <- rootcount_density_fitted(par, n = n)
+  df2 <- data.frame(
+    bundle_id = c(1, df2$bundle_id, max(df2$bundle_id)),
+    x = c(df2$x[1], df2$x, utils::tail(df2$x, 1)),
+    y = c(0, df2$y, 0)
+  )
+  # axes limits
+  xlims <- round_range(c(df1$x, df2$x), lim = xlim, ticks = ticks)
+  ylims <- round_range(c(df1$y, df2$y), lim = ylim, ticks = ticks)
+  # plot
+  ggplot2::ggplot() +
+    ggplot2::theme_bw() +
+    ggplot2::geom_col(
+      data = df1,
+      ggplot2::aes(x = .data$x, y = .data$y),
+      width = (max(x) - min(x))/bins,
+      color = settings$color_meas,
+      fill = settings$fill_meas,
+      alpha = settings$alpha_meas
+    ) +
+    ggplot2::geom_path(
+      data = df2,
+      ggplot2::aes(x = .data$x, y = .data$y),
+      color = settings$color_fit,
+      linetype = settings$linetype_fit,
+      linewidth = settings$linewidth_fit
+    ) +
+    ggplot2::xlab(xlab) +
+    ggplot2::ylab(ylab) +
+    ggplot2::scale_x_continuous(breaks = xlims$breaks) +
+    ggplot2::scale_y_continuous(breaks = ylims$breaks) +
+    ggplot2::coord_cartesian(
+      xlim = xlims$lim,
+      ylim = ylims$lim,
+      expand = FALSE
+    )
+}
+
+
 #' Initial guess for multisegment power-law fitting
 #'
 #' @description
@@ -328,74 +486,6 @@ breakpoint_options <- function(n, xmin, xmax, n0 = 4, fixed = rep(NA, n)) {
   }
   # return matrix
   cmb
-}
-
-
-#' Integrate a power-law curve
-#'
-#' @description
-#' Integrate a power law curve in the form:
-#'
-#'   y(x) = x^b
-#'
-#' between x=x1 and x=x2.
-#'
-#' Function is vectorised.
-#'
-#' @param b vector with powers
-#' @param x1,x2 vectors with lower and upper integration limits
-#' @return vector with integrands
-#' @examples
-#' power_integrate(2.1, 2, 5)
-#' stats::integrate(function(x) x^2.1, 2, 5)
-#'
-power_integrate <- function(b, x1, x2) {
-  ifelse(
-    is_near(b, -1),
-    log(x2) - log(x1),
-    (x2^(b + 1) - x1^(b + 1))/(b + 1)
-  )
-}
-
-
-#' Derivative of function `power_integrate()`
-#'
-#' @description
-#' Generates the derivative of the results of the function `power_integrate()`
-#' with respect to its input parameters `b`, `x1` and `x2`.
-#'
-#' Function is vectorised.
-#'
-#' @inheritParams power_integrate
-#' @return a list containing the derivatives for each input parameter. Has
-#'   fields `b`, `x1` and `x2`
-#' @examples
-#' # Test jacobian by comparing to numberical solution
-#' b <- 1.2
-#' x1 <- 2.1
-#' x2 <- 3.3
-#'
-#' I <- power_integrate(b, x1, x2)
-#' eps <- 1e-6
-#' J <- power_integrate_jacobian(b, x1, x2)
-#'
-#' Jb <- (power_integrate(b + eps, x1, x2) - I)/eps
-#' Jx1 <- (power_integrate(b, x1 + eps, x2) - I)/eps
-#' Jx2 <- (power_integrate(b, x1, x2 + eps) - I)/eps
-#'
-#' J
-#' c(Jb, Jx1, Jx2)
-#'
-power_integrate_jacobian <- function(b, x1, x2) {
-  list(
-    b = ifelse(
-      is_near(b, -1),
-      log(x2)^2/2 - log(x1)^2/2,
-      (x1^(b + 1) - x2^(b + 1))/(b + 1)^2 - (x1^(b + 1)*log(x1) - x2^(b + 1)*log(x2))/(b + 1)
-    ),
-    x1 = -x1^b,
-    x2 = x2^b
-  )
 }
 
 
@@ -608,11 +698,11 @@ rootcount_multiplier_jacobian <- function(xb, b, xmin, xmax) {
   I <- power_integrate(b, g[1:ns], g[2:(ns + 1)])
   JI <- power_integrate_jacobian(b, g[1:ns], g[2:(ns + 1)])
   if (ns == 2) {
-    I_xb <- rbind(JI$x2[1:(ns - 1)], JI$x1[2:ns])
+    I_xb <- rbind(JI$upper[1:(ns - 1)], JI$lower[2:ns])
   } else {
-    I_xb <- rbind(0, diag(JI$x1[2:ns])) + rbind(diag(JI$x2[1:(ns - 1)]), 0)
+    I_xb <- rbind(0, diag(JI$lower[2:ns])) + rbind(diag(JI$upper[1:(ns - 1)]), 0)
   }
-  I_b <- diag(JI$b)
+  I_b <- diag(JI$power)
   # multiplication constants
   k <- xb^(-diff(b))
   m <- c(1, cumprod(k))
@@ -842,7 +932,7 @@ rootcount_loglikelihood_single_jacobian <- function(
   lpi_par <- log(x)
   # derivative: total of integral
   pt <- power_integrate(par, xmin, xmax)
-  pt_par <- power_integrate_jacobian(par, xmin, xmax)$b
+  pt_par <- power_integrate_jacobian(par, xmin, xmax)$power
   # likelihood
   sum(weights*lpi_par) - sum(weights)*pt_par/pt
 }
@@ -856,7 +946,7 @@ rootcount_loglikelihood_single_jacobian <- function(
 #'
 #' @inheritParams rootcount_fit
 #' @return a dataframe with x-values (`x`) and the cumulative probability
-#' density (`y`)
+#'   density (`y`)
 #' @export
 #' @examples
 #' rootcount_cumulative_observations(seq(2, 5, l = 10))
@@ -951,6 +1041,7 @@ rootcount_density_fitted <- function(par, n = 101) {
 #' @description
 #' Calculate the fitted cumulative probability density for observations `x`,
 #' given the fit results `par` generated by the function `rootcount_fit()`
+#' or `rootclass_fit()`.
 #'
 #' @inheritParams rootcount_density_fitted
 #' @param x array with observations

@@ -73,6 +73,132 @@ copula_gaussian_fit <- function(
 }
 
 
+#' GGplot for copula fitting
+#'
+#' @description
+#' Generate a plot, using ggplot, of the copula fit between root strain to
+#' failure and root tensile strength, both normalised by the power-law fitted
+#' predictions.
+#'
+#' A Gaussian copula is used, and the marginal distributions are both
+#' Weibull-distributed with known shape parameter and a mean of 1.
+#'
+#' Prediction intervals can be generated.
+#'
+#' @importFrom rlang .data
+#' @inheritParams power_weibull_plot
+#' @param x,y arrays with x and y-observations.
+#' @param shape_x,shape_y Weibull shape parameters for parameters `x` and `y`
+#' @param rho correlation coefficient for the Gaussian copula
+#' @param ellipsoid_axes if `TRUE`, plot the major and minor axis of the
+#'   Gaussian prediction ellipsoid
+#' @param ellipsoid_axes_linetype array with linetypes for major and minor
+#'   axis of the prediction ellipsoid
+#' @return ggplot object
+#' @export
+#' @examples
+#' # input
+#' shape_x <- 4
+#' shape_y <- 6
+#' rho <- -0.4
+#'
+#' # create random data
+#' df <- biomech_random(rep(1, 100), 1, 0, shape_x, 1, 0, shape_y, rho = rho)
+#'
+#' # annotations
+#' ann <- create_annotations(rho, prefix = "rho==", parse = TRUE)
+#'
+#' # plot
+#' copula_gaussian_plot(df$epsru, df$tru, shape_x, shape_y, rho = rho,
+#'   annotations = ann)
+#'
+copula_gaussian_plot <- function(
+    x,
+    y,
+    shape_x,
+    shape_y,
+    rho = 0,
+    confidence = c(0.5, 0.95),
+    annotations = NULL,
+    xlab = expression(epsilon[r*","*u]/epsilon[r*","*u*","*fit]),
+    ylab = expression(t[r*","*u]/t[r*","*u*","*fit]),
+    xlim = c(NA, NA),
+    ylim = c(NA, NA),
+    ticks = 7,
+    ellipsoid_axes = TRUE,
+    ellipsoid_axes_linetype = c(1, 2),
+    settings = plot_settings()
+) {
+  # initiate plot
+  plt <- ggplot2::ggplot() +
+    ggplot2::theme_bw() +
+    ggplot2::xlab(xlab) +
+    ggplot2::ylab(ylab)
+  # generate prediction intervals
+  if (!is.null(rho) & length(confidence) >= 1) {
+    df_ell <- bivariate_normal_predictioninterval(rho = rho, confidence = confidence)
+    df_conf <- bivariate_normal_toweibull(df_ell$x, df_ell$y, shape_x, shape_y)
+    df_conf$confidence <- df_ell$confidence
+    # add prediction intervals to plot
+    plt <- plt + ggplot2::geom_polygon(
+      data = df_conf,
+      ggplot2::aes(x = .data$x, y = .data$y, group = as.factor(.data$confidence)),
+      alpha = settings$alpha_fit/length(confidence),
+      fill = settings$fill_fit
+    )
+    # calculate axes
+    if (ellipsoid_axes == TRUE) {
+      df_ax <- bivariate_normal_axes(rho = rho, confidence = max(confidence))
+      df_axes <- bivariate_normal_toweibull(df_ax$x, df_ax$y, shape_x, shape_y)
+      df_axes$axis <- df_ax$axis
+      # add axes to plot
+      plt <- plt + ggplot2::geom_path(
+        data = df_axes,
+        ggplot2::aes(x = .data$x, y = .data$y, linetype = as.factor(.data$axis)),
+        color = settings$color_fit,
+        linewidth = settings$linewidth_fit,
+        show.legend = FALSE
+      ) +
+        ggplot2::scale_linetype_manual(values = ellipsoid_axes_linetype)
+    }
+    # determine axes limits
+    xlims <- round_range(c(x, df_conf$x), lim = xlim, ticks = ticks)
+    ylims <- round_range(c(y, df_conf$y), lim = ylim, ticks = ticks)
+  } else {
+    # determine axes limits
+    xlims <- round_range(x, lim = xlim, ticks = ticks)
+    ylims <- round_range(y, lim = ylim, ticks = ticks)
+  }
+  # add points to plot
+  plt <- plt + ggplot2::geom_point(
+    data = data.frame(x = x, y = y),
+    ggplot2::aes(x = .data$x, y = .data$y),
+    color = settings$color_meas,
+    shape = settings$shape_meas,
+    size = settings$size_meas
+  )
+  # add labels to plot
+  if (!is.null(annotations)) {
+    annotations$xplot <- xlims$lim[1] + diff(xlims$lim)*annotations$x
+    annotations$yplot <- ylims$lim[1] + diff(ylims$lim)*annotations$y
+    plt <- plt + ggplot2::geom_text(
+      data = annotations,
+      ggplot2::aes(x = .data$xplot, y = .data$yplot, label = .data$label, hjust = .data$hjust, vjust = .data$vjust),
+      parse = annotations$parse[1],
+      color = settings$color_ann,
+      size = settings$size_ann
+    )
+  }
+  # change axis limits
+  plt <- plt +
+    ggplot2::scale_x_continuous(breaks = xlims$breaks) +
+    ggplot2::scale_y_continuous(breaks = ylims$breaks) +
+    ggplot2::coord_cartesian(xlim = xlims$lim, ylim = ylims$lim, expand = FALSE)
+  # return plot
+  plt
+}
+
+
 #' Objective loglikelihood function for gaussian copula fitting
 #'
 #' @description
