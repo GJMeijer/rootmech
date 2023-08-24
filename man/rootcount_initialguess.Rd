@@ -26,7 +26,7 @@ the probability. These values may however be overwritten if required.}
 \item{n0}{number of extra optional segments breakpoint positions to include
 in generating an initial guess}
 
-\item{fixed}{vector with `2*ns + 1` elements, with values of the
+\item{fixed}{vector with `2*ns - 1` elements, with values of the
 fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
 that should be fixed and therefore not fitted. Values that are `NA` will
 be fitted while any non-NA will be held constant}

@@ -13,6 +13,7 @@
 #' @param lower,upper vectors with lower and upper integration limits
 #' @param multiplier (optional) vector with multipliers
 #' @return vector with integrands
+#' @export
 #' @examples
 #' power_integrate(2.1, 2, 5, multiplier = 3)
 #' stats::integrate(function(x) 3*x^2.1, 2, 5)
@@ -38,6 +39,7 @@ power_integrate <- function(power, lower, upper, multiplier = 1) {
 #' @inheritParams power_integrate
 #' @return a list containing the derivatives for each input parameter. Has
 #'   fields `power`, `lower` and `upper` and `multiplier`.
+#' @export
 #' @examples
 #' power <- -0.4
 #' lower <- 1.5

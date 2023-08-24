@@ -18,14 +18,14 @@
 #'   the probability. These values may however be overwritten if required.
 #' @param n0 number of extra optional segments breakpoint positions to include
 #'   in generating an initial guess
-#' @param fixed vector with `2*ns + 1` elements, with values of the
+#' @param fixed vector with `2*ns - 1` elements, with values of the
 #'   fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
 #'   that should be fixed and therefore not fitted. Values that are `NA` will
 #'   be fitted while any non-NA will be held constant
 #' @param weights vector with weights for each observation. The individual
 #'   probabilities are raised to the power `weights`. By default, all
 #'   observations are weighted equally (`weights = 1`)
-#' @param par0 vector with user-defined initial guess for th vector of fitting
+#' @param guess vector with user-defined initial guess for th vector of fitting
 #'   parameters (`ns - 1` breakpoints, followed by `ns` power coefficients).
 #'   If not defined, a simple guess is made
 #' @return a list with the loglikelihood (field `loglikelihood`) and a
@@ -63,7 +63,7 @@ rootcount_fit <- function(
     n0 = 0,
     fixed = rep(NA, 2*ns - 1),
     weights = rep(1, length(x)),
-    par0 = NULL
+    guess = NULL
 ) {
   # remove NA values from array
   x <- x[!is.na(x)]
@@ -74,8 +74,8 @@ rootcount_fit <- function(
   if (any(is.na(fixed))) {
     # fit - only if not all parameters already fixed
     # initial guess
-    if (is.null(par0)) {
-      par0 <- rootcount_initialguess(
+    if (is.null(guess)) {
+      guess <- rootcount_initialguess(
         x,
         ns,
         xmin = xmin,
@@ -85,8 +85,8 @@ rootcount_fit <- function(
         weights = weights
       )
     } else {
-      if (length(par0) != sum(is.na(fixed))) {
-        stop("Length of initial guess vector `par0` not compatible with number of
+      if (length(guess) != sum(is.na(fixed))) {
+        stop("Length of initial guess vector `guess` not compatible with number of
              `NA` values in `fixed`argument")
       }
     }
@@ -94,7 +94,7 @@ rootcount_fit <- function(
     if (ns == 1) {
       # single segment
       sol <- stats::optim(
-        par0,
+        guess,
         rootcount_loglikelihood_single,
         gr = rootcount_loglikelihood_single_jacobian,
         method = "BFGS",
@@ -114,7 +114,7 @@ rootcount_fit <- function(
       constr <- rootcount_constraints(ns, xmin, xmax, fixed = fixed)
       # optimize
       sol <- stats::constrOptim(
-        par0,
+        guess,
         rootcount_loglikelihood,
         grad = rootcount_loglikelihood_jacobian,
         constr$ui,
@@ -195,7 +195,7 @@ rootcount_fit <- function(
 #'   rweibull(25, shape = 12, scale = 6)
 #' )
 #'
-#' ft <- rootcount_fit(x, 2)
+#' ft <- rootcount_fit(x, 6)
 #'
 #' rootcount_cumulative_plot(x, ft$par)
 rootcount_cumulative_plot <- function(
@@ -350,6 +350,7 @@ rootcount_density_plot <- function(
 #'
 #' @inheritParams rootcount_fit
 #' @return a vector with an initial guess
+#' @export
 #' @examples
 #' rootcount_initialguess(seq(1.2, 5.6, l = 50), 3)
 #' rootcount_initialguess(seq(1.2, 5.6, l = 50), 3, n0 = 3)
@@ -395,7 +396,7 @@ rootcount_initialguess <- function(
             x, ns,
             xmin = xmin, xmax = xmax,
             weights = weights,
-            par0 = rep(0, nb_unfixed),
+            guess = rep(0, nb_unfixed),
             fixed = c(xbi, fixed[ns:(2*ns - 1)])
           )
         }
@@ -416,79 +417,6 @@ rootcount_initialguess <- function(
 }
 
 
-#' Select breakpoints for initial `fit_count_power()` guess
-#'
-#' @description
-#' Generate a series of optional x-breakpoints on a known interval `xmin` to
-#' `xmax`. The domain is split into equal intervals, where `n0` indicates the
-#' extra number of optional points on top of `n`. All combinations of `n`
-#' breakpoints from the optional set with length `n + n0` are returned as a
-#' matrix
-#'
-#' Specific breakpoints may be fixed using the `fixed` argument.
-#'
-#' @param n number of breakpoints to select
-#' @param xmin,xmax min and max value of domain
-#' @param n0 total number of extra optional locations
-#' @param fixed array with values of fixed breakpoints. Should contain `NA` for
-#'   each breakpoint that is unknown
-#' @return matrix with breakpoint options
-#' @export
-#' @examples
-#' # input
-#' n <- 3
-#' xmin <- 0
-#' xmax <- 10
-#'
-#' # no fixes
-#' breakpoint_options(n, xmin, xmax, n0 = 2)
-#' # fix in middle
-#' breakpoint_options(n, xmin, xmax, fixed = c(NA, 6, NA), n0 = 4)
-#' # fix at end
-#' breakpoint_options(n, xmin, xmax, fixed = c(NA, NA, 6), n0 = 4)
-#'
-breakpoint_options <- function(n, xmin, xmax, n0 = 4, fixed = rep(NA, n)) {
-  if (all(!is.na(fixed))) {
-    cmb <- matrix(fixed, nrow = 1)
-  } else {
-    # only keep regions in which a fit should be made (must contain at least one NA)
-    xbt <- c(xmin, fixed, xmax)
-    ina <- which(is.na(xbt))
-    t1 <- xbt[ina - 1]
-    t2 <- xbt[ina + 1]
-    ds <- data.frame(
-      xmin = t1[!is.na(t1)],
-      xmax = t2[!is.na(t2)],
-      nb = which(diff(is.na(xbt)) == -1) - which(diff(is.na(xbt)) == 1)
-    )
-    # options per segment - fit as evenly as possible
-    nt <- with(ds, (xmax - xmin)/(sum(xmax - xmin))*n0)
-    ds$ns <- round(ds$nb + nt)
-    # options
-    Lopts <- lapply(
-      1:nrow(ds),
-      function(i) seq(ds$xmin[i], ds$xmax[i], l = ds$ns[i] + 2)[2:(ds$ns[i] + 1)]
-    )
-    # draws per segment
-    Lperm <- lapply(
-      1:nrow(ds),
-      function(i) if (ds$nb[i] == 1) {
-        matrix(Lopts[[i]], ncol = 1)
-      } else {
-        t(utils::combn(Lopts[[i]], ds$nb[i]))
-      }
-    )
-    # all combs of unknown
-    co <- Reduce(function(...) merge(..., by = NULL), Lperm)
-    # add fixed values back in
-    cmb <- matrix(rep(fixed, nrow(co)), nrow = nrow(co), byrow = TRUE)
-    cmb[, ina - 1] <- as.matrix(co)
-  }
-  # return matrix
-  cmb
-}
-
-
 #' Combine fitting parameters and known parameters into single vector
 #'
 #' @description
@@ -499,8 +427,9 @@ breakpoint_options <- function(n, xmin, xmax, n0 = 4, fixed = rep(NA, n)) {
 #' @param fixed vector with known parameters. `NA` values in this vector
 #'   indicate unknwon values (i.e., those in `par`).
 #' @return vector with all coefficients
+#' @export
 #' @examples
-#' rootcount_construct_par(c(1,2,3), fixed = c(NA, 5, NA, NA, 6))
+#' rootcount_constructpar(c(1,2,3), fixed = c(NA, 5, NA, NA, 6))
 #'
 rootcount_constructpar <- function(par, fixed = rep(NA, length(par))) {
   fixed[is.na(fixed)] <- par
@@ -522,6 +451,7 @@ rootcount_constructpar <- function(par, fixed = rep(NA, length(par))) {
 #' @param logx vector with log-transformed observations x
 #' @return vector with scaled log-transformed probabilities for each
 #'   observation in `x`
+#' @export
 #' @examples
 #' x <- seq(1, 4, l = 14)
 #' b <- c(1, 2, 3)
@@ -551,6 +481,7 @@ rootcount_logprob <- function(logxb, b, logx) {
 #' @inheritParams rootcount_logprob
 #' @return a list containing the derivatives for each input parameter. Has
 #'   fields `logxb` and `b`.
+#' @export
 #' @examples
 #' # Test jacobian by comparing to numberical solution
 #' logxb <- c(1.25, 1.35)
@@ -620,6 +551,7 @@ rootcount_logprob_jacobian <- function(logxb, b, logx) {
 #' @param b vector with power-law power coefficients for each segment
 #' @return vector with multiplier contributions of each segment, which, when
 #'   summed give the probability multiplier
+#' @export
 #' @examples
 #' # TEST - does probability sum to one?
 #' # parameters
@@ -661,6 +593,7 @@ rootcount_multiplier <- function(xb, b, xmin, xmax) {
 #' @inheritParams rootcount_multiplier
 #' @return a list containing the derivatives for each input parameter. Has
 #'   fields `xb` and `b`.
+#' @export
 #' @examples
 #' # Test jacobian by comparing to numberical solution
 #' xb <- c(3, 4)
@@ -736,6 +669,7 @@ rootcount_multiplier_jacobian <- function(xb, b, xmin, xmax) {
 #'   consist of n-1 consecutive x-breakpoints, followed by n power-law
 #'   cower coefficients
 #' @return scalar with weighted loglikelihood value
+#' @export
 #' @examples
 #' # parameters
 #' x <- seq(1.5, 6.5, l = 25)
@@ -751,7 +685,7 @@ rootcount_loglikelihood <- function(
     xmin = min(x, na.rm = TRUE),
     xmax = max(x, na.rm = TRUE),
     weights = rep(1, length(x)),
-    fixed = rep(length(par), NA)
+    fixed = rep(NA, length(par))
 ) {
   # generate single vector
   parall <- rootcount_constructpar(par, fixed = fixed)
@@ -780,6 +714,7 @@ rootcount_loglikelihood <- function(
 #' @inheritParams rootcount_loglikelihood
 #' @return a scalar containing the derivatives for each value in fitting vector
 #'   `par`
+#' @export
 #' @examples
 #' # Test jacobian by comparing to numberical solution
 #' x <- seq(1.4, 6.9, l = 25)
@@ -808,7 +743,7 @@ rootcount_loglikelihood_jacobian <- function(
     xmin = min(x, na.rm = TRUE),
     xmax = max(x, na.rm = TRUE),
     weights = rep(1, length(x)),
-    fixed = rep(length(par), NA)
+    fixed = rep(NA, length(par))
 ) {
   # generate single vector
   parall <- rootcount_constructpar(par, fixed = fixed)
@@ -843,6 +778,7 @@ rootcount_loglikelihood_jacobian <- function(
 #'
 #' @inheritParams rootcount_fit
 #' @return a list with the constraint matrix (`ui`) and vector (`ci`)
+#' @export
 #' @examples
 #' rootcount_constraints(4, 2, 5)
 #'
@@ -875,6 +811,7 @@ rootcount_constraints <- function(ns, xmin, xmax, fixed = rep(NA, 2*ns - 1)) {
 #'
 #' @inheritParams rootcount_loglikelihood
 #' @return scalar with weighted loglikelihood value
+#' @export
 #' @examples
 #' rootcount_loglikelihood_single(2, seq(2, 4, l = 10))
 #'
@@ -906,6 +843,7 @@ rootcount_loglikelihood_single <- function(
 #' @inheritParams rootcount_loglikelihood_single
 #' @return a scalar containing the derivatives for each value in fitting vector
 #'   `par`
+#' @export
 #' @examples
 #' # Test jacobian by comparing to numberical solution
 #' x <- seq(2.2, 6.5, l = 51)
@@ -1127,7 +1065,7 @@ rootcount_density_prediction <- function(x, par) {
 #'
 rootcount_random <- function(n, par) {
   # draw uniform distribution -> cumulative
-  p <- runif(n, min = 0, max = 1)
+  p <- stats::runif(n, min = 0, max = 1)
   # find segment
   i <- cut(p, c(-Inf, cumsum(par$total)), labels = FALSE)
   # cumulative probability at the start of eachs segment

@@ -17,4 +17,5 @@ Calculate the value of the error function
 }
 \examples{
 erf(0.5)
+
 }

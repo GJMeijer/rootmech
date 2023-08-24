@@ -12,6 +12,12 @@
 #'   class. `xmax > xmin >= TRUE` for each element.
 #' @param y vector with number of roots (or total root length) per class
 #' @param ns number of power-law segments to use in fit
+#' @param n0 number of extra optional segments breakpoint positions to include
+#'   in generating an initial guess
+#' @param fixed vector with `2*ns + 1` elements, with values of the
+#'   fitting parameter (`ns + 1` breakpoints, `ns` power-law coefficients)
+#'   that should be fixed and therefore not fitted. Values that are `NA` will
+#'   be fitted while any non-NA will be held constant
 #' @param guess initial guess for the fitting parameters (a vector with
 #'   `ns + 1` x-breakpoints, and `ns` power-law coefficients). If not
 #'   provided, an initial guess is made according to the function
@@ -26,21 +32,25 @@
 #' @export
 #' @examples
 #' no <- 9
-#' xc <- seq(2, 7, l = no + 1)
+#' xc <- seq(2, 6.5, l = no + 1)
 #' xmin <- xc[1:no]
 #' xmax <- xc[2:(no + 1)]
 #' y <- (8 - (0.5*(xmin + xmax) - 5)^2)
 #'
 #' ns <- 2
-#' ft <- rootclass_fit(xmin, xmax, y, ns)
 #'
-#' rootclass_cumulative_plot(ft$par, xmin, xmax, y)
+#' ft1 <- rootclass_fit(xmin, xmax, y, ns)
+#' ft2 <- rootclass_fit(xmin, xmax, y, ns, fixed = c(1, NA, 7, NA, -3))
 #'
+#' rootclass_cumulative_plot(ft1$par, xmin, xmax, y)
+#' rootclass_cumulative_plot(ft2$par, xmin, xmax, y)
 rootclass_fit <- function(
     xmin,
     xmax,
     y,
     ns,
+    n0 = 0,
+    fixed = rep(NA, 2*ns + 1),
     guess = NULL,
     weights_multiplier = rep(1, length(xmin)),
     weights_power = rep(0, length(xmin))
@@ -50,10 +60,10 @@ rootclass_fit <- function(
   weights_power <- rep(weights_power, length(xmin))[1:length(xmin)]
   # initial guess
   if (is.null(guess)) {
-    guess <- rootclass_initialguess(xmin, xmax, y, ns)
+    guess <- rootclass_initialguess(xmin, xmax, y, ns, fixed = fixed, n0 = n0)
   }
   # constraints
-  constr <- rootclass_constraints(ns, xmin, xmax, y)
+  constr <- rootclass_constraints(ns, xmin, xmax, y, fixed = fixed)
   # fit
   sol <- stats::constrOptim(
     guess,
@@ -66,21 +76,24 @@ rootclass_fit <- function(
     xmin = xmin,
     xmax = xmax,
     y = y,
+    fixed = fixed,
     weights_multiplier = weights_multiplier,
     weights_power = weights_power
   )
   # generate list with outputs
-  xb <- sol$par[1:(ns + 1)]
-  b <- sol$par[(ns + 2):(2*ns + 1)]
+  parall <- fixed
+  parall[is.na(fixed)] <- sol$par
+  xb <- parall[1:(ns + 1)]
+  b <- parall[(ns + 2):(2*ns + 1)]
   a <- rootclass_multipliers(xb, b)
   pti <- rootclass_probfit(xb, a, b)
   list(
     loglikelihood = sol$value,
     par = data.frame(
-      xmin = sol$par[1:ns],
-      xmax = sol$par[2:(ns + 1)],
+      xmin = xb[1:ns],
+      xmax = xb[2:(ns + 1)],
       multiplier = a/sum(pti),
-      power = sol$par[(ns + 2):(2*ns + 1)],
+      power = b,
       total = pti/sum(pti)
     )
   )
@@ -96,7 +109,7 @@ rootclass_fit <- function(
 #' Plots are generated using the ggplot2 package.
 #'
 #' @importFrom rlang .data
-#' @inheritParams power_weibull_plot
+#' @inheritParams rootcount_cumulative_plot
 #' @param xmin,xmax vector with lower and upper limits of diameter classes
 #' @param y vector with number of roots (or root length) in each class
 #' @param par dataframe with fitting values per segment. For more information,
@@ -144,13 +157,91 @@ rootclass_cumulative_plot <- function(
       ggplot2::aes(x = .data$x, y = .data$y),
       color = settings$color_meas,
       linetype = settings$linetype_meas,
-      size = settings$linewidth_meas
+      linewidth = settings$linewidth_meas
     ) +
     ggplot2::geom_point(
       data = df1,
       ggplot2::aes(x = .data$x, y = .data$y),
       color = settings$color_meas,
       size = settings$size_meas
+    ) +
+    ggplot2::geom_path(
+      data = df2,
+      ggplot2::aes(x = .data$x, y = .data$y),
+      color = settings$color_fit,
+      linetype = settings$linetype_fit,
+      linewidth = settings$linewidth_fit
+    ) +
+    ggplot2::xlab(xlab) +
+    ggplot2::ylab(ylab) +
+    ggplot2::scale_x_continuous(breaks = xlims$breaks) +
+    ggplot2::scale_y_continuous(breaks = ylims$breaks) +
+    ggplot2::coord_cartesian(
+      xlim = xlims$lim,
+      ylim = ylims$lim,
+      expand = FALSE
+    )
+}
+
+
+#' Plot observed and fitted root probability distributions
+#'
+#' @description
+#' Plot the observed and multisegment power-law fit for the probability density
+#' distribution of binned root count data.
+#'
+#' Plots are generated using the ggplot2 package.
+#'
+#' @importFrom rlang .data
+#' @inheritParams rootclass_cumulative_plot
+#' @return ggplot object
+#' @export
+#' @examples
+#' no <- 9
+#' xc <- seq(2, 6.8, l = no + 1)
+#' xmin <- xc[1:no]
+#' xmax <- xc[2:(no + 1)]
+#' y <- (8 - (0.5*(xmin + xmax) - 5)^2)
+#'
+#' ns <- 2
+#' par <- rootclass_fit(xmin, xmax, y, ns)$par
+#'
+#' rootclass_density_plot(par, xmin, xmax, y)
+rootclass_density_plot <- function(
+    par,
+    xmin,
+    xmax,
+    y,
+    n = 101,
+    xlab = expression("Root diameter"~d[r]~"[mm]"),
+    ylab = "Probability density [-]",
+    xlim = c(0, NA),
+    ylim = c(0, NA),
+    ticks = 7,
+    settings = plot_settings()
+) {
+  # observed data
+  df1 <- data.frame(xmin = xmin, xmax = xmax, y = y)
+  df1$p <- with(df1, y/sum(y)/(xmax - xmin))
+  # fitted density curve
+  df2 <- rootcount_density_fitted(par, n = n)
+  df2 <- data.frame(
+    bundle_id = c(1, df2$bundle_id, max(df2$bundle_id)),
+    x = c(df2$x[1], df2$x, utils::tail(df2$x, 1)),
+    y = c(0, df2$y, 0)
+  )
+  # axes limits
+  xlims <- round_range(c(df1$xmin, df1$xmax, df2$x), lim = xlim, ticks = ticks)
+  ylims <- round_range(c(df1$p, df2$y), lim = ylim, ticks = ticks)
+  # plot
+  ggplot2::ggplot() +
+    ggplot2::theme_bw() +
+    ggplot2::geom_rect(
+      data = df1,
+      ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax, ymin = 0, ymax = .data$p),
+      color = settings$color_meas,
+      fill = settings$fill_meas,
+      alpha = settings$alpha_meas
     ) +
     ggplot2::geom_path(
       data = df2,
@@ -181,19 +272,77 @@ rootclass_cumulative_plot <- function(
 #' coefficients are simply taken as 0
 #'
 #' @inheritParams rootclass_fit
+#' @param frac parameter for estimating outer breakpoints, if not fixed. The
+#'   breakpoint is estimated as the smallest value of x-values that are at
+#'   `frac` normalised position (0 to 1) within their class. For the last
+#'   breakpoint position, this is the position `1 - frac`.
 #' @return vector with initial guess
+#' @export
+#' @examples
+#' no <- 9
+#' xc <- seq(2, 7, l = no + 1)
+#' xmin <- xc[1:no]
+#' xmax <- xc[2:(no + 1)]
+#' y <- (8 - (0.5*(xmin + xmax) - 5)^2)
+#' ns <- 2
+#' rootclass_initialguess(xmin, xmax, y, ns)
 #'
 rootclass_initialguess <- function(
     xmin,
     xmax,
     y,
-    ns
+    ns,
+    n0 = 0,
+    fixed = rep(NA, 2*ns + 1),
+    frac = 0.25,
+    weights_multiplier = rep(1, length(xmin)),
+    weights_power = rep(0, length(xmin))
 ) {
-  lower <- 0.5*(min(xmin) + min(xmax))
-  upper <- 0.5*(max(xmin) + max(xmax))
-  xb <- seq(lower, upper, l = ns + 1)
-  b <- rep(0, ns)
-  c(xb, b)
+  # estimate fitting domain
+  fixed_xb <- fixed[1:(ns + 1)]
+  if (is.na(fixed_xb[1])) {
+    x1 <- min(xmin + frac*(xmax - xmin))
+  } else {
+    x1 <- fixed_xb[1]
+  }
+  if (is.na(fixed_xb[ns + 1])) {
+    x2 <- max(xmax - frac*(xmax - xmin))
+  } else {
+    x2 <- fixed_xb[ns + 1]
+  }
+  # breakpoint selection
+  xb <- cbind(
+    x1,
+    breakpoint_options(ns - 1, x1, x2, fixed = fixed_xb[2:ns], n0 = n0),
+    x2,
+    deparse.level = 0
+  )
+  # number of unfixed power-coefficients
+  nb_unfixed <- sum(is.na(fixed[(ns+2):(2*ns + 1)]))
+  # fit for each of the breakpoint options
+  Lopts <- apply(
+    xb,
+    1,
+    function(xbi) {
+      rootclass_fit(
+        xmin, xmax, y, ns,
+        weights_multiplier = weights_multiplier,
+        weights_power = weights_power,
+        guess = rep(0, nb_unfixed),
+        fixed = c(xbi, fixed[(ns + 2):(2*ns + 1)])
+      )
+    }
+  )
+  # find option with minimum loglikelihood score
+  i <- which.max(sapply(Lopts, function(x) x$loglikelihood))
+  # vector with all initial parameters
+  parall <- c(
+    Lopts[[i]]$par$xmin,
+    Lopts[[i]]$par$xmax[ns],
+    Lopts[[i]]$par$power
+  )
+  # return non-fixed parameters
+  parall[is.na(fixed)]
 }
 
 
@@ -212,25 +361,36 @@ rootclass_initialguess <- function(
 #' - Largest breakpoint larger than the largest lower class limit in `xmin`
 #'   that contains roots (`y > 0`)
 #'
-#' @inheritParams rootcount_fit
+#' @inheritParams rootclass_fit
 #' @return a list with the constraint matrix (`ui`) and vector (`ci`)
+#' @export
 #' @examples
-#' rootclass_constraints(3, seq(2, 5), seq(3, 6), rep(1, 4))
+#' ns <- 3
+#' xmin <- seq(2, 5)
+#' xmax <- seq(3, 6)
+#' y <- c(1, 4)
+#' rootclass_constraints(ns, xmin, xmax, y)
 #'
-rootclass_constraints <- function(ns, xmin, xmax, y) {
+rootclass_constraints <- function(ns, xmin, xmax, y, fixed = rep(NA, 2*ns + 1)) {
   # generate matrix
   ui <- matrix(
-    c(-1, rep(c(1, -1, rep(0, ns + 2)), ns), 1, 1, rep(0, ns*(ns + 3))),
+    c(1, -1, rep(c(-1, rep(0, ns + 2), 1), ns), 1, rep(0, ns*(ns + 3))),
     nrow = ns + 3,
     ncol = 2*ns + 1,
     byrow = FALSE
   )
   # generate vector
   ci <- c(
+    0,
     -min(xmax[y > 0], na.rm = TRUE),
-    rep(0, ns + 1),
+    rep(0, ns),
     max(xmin[y > 0], na.rm = TRUE)
   )
+  # account for fixed vectors
+  # add known values to coefficients in ci - and remove from matrix
+  free <- is.na(fixed)
+  ci <- ci - (as.matrix(ui[, !free], ncol = sum(!free)) %*% fixed[!free])
+  ui <- as.matrix(ui[, free], ncol = sum(free))
   # return list
   list(ui = ui, ci = ci)
 }
@@ -243,6 +403,7 @@ rootclass_constraints <- function(ns, xmin, xmax, y) {
 #'   consist of `ns + 1` consecutive x-breakpoints, followed by `ns` power-law
 #'   cower coefficients
 #' @return loglikelihood value (scalar)
+#' @export
 #' @examples
 #' xb <- c(1.5, 3.5, 6.5, 7.5, 8.5)
 #' b <- seq(-2, 2, l = length(xb) - 1)
@@ -256,14 +417,18 @@ rootclass_constraints <- function(ns, xmin, xmax, y) {
 rootclass_loglikelihood <- function(
     par,
     xmin, xmax, y,
+    fixed = rep(NA, length(par)),
     weights_multiplier = rep(1, length(xmin)),
     weights_power = rep(0, length(xmin))
 ) {
+  # generate vector with all parameters, including fixed
+  parall <- fixed
+  parall[is.na(fixed)] <- par
   # split parameters
-  ns <- (length(par) - 1)/2
+  ns <- (length(parall) - 1)/2
   no <- length(xmin)
-  xb <- par[1:(ns + 1)]
-  b <- par[(ns + 2):(2*ns + 1)]
+  xb <- parall[1:(ns + 1)]
+  b <- parall[(ns + 2):(2*ns + 1)]
   # multipliers
   a <- rootclass_multipliers(xb, b)
   # unscaled probability in observations
@@ -271,7 +436,10 @@ rootclass_loglikelihood <- function(
   # unscaled total probability
   pt <- sum(rootclass_probfit(xb, a, b))
   # generate weights
-  pw <- rootclass_probobs(xb, a, b, xmin, xmax, weights_multiplier = weights_multiplier, weights_power = weights_power)
+  pw <- rootclass_probobs(
+    xb, a, b, xmin, xmax,
+    weights_multiplier = weights_multiplier, weights_power = weights_power
+  )
   weights <- y*pw/pi
   # loglikelihood
   sum(weights*(log(pi) - log(pt)))
@@ -290,6 +458,7 @@ rootclass_loglikelihood <- function(
 #' @inheritParams rootclass_loglikelihood
 #' @return a scalar containing the derivatives for each value in fitting vector
 #'   `par`
+#' @export
 #' @examples
 #' xb <- c(1.5, 3.5, 5.5)
 #' b <- seq(-0.5, 0.5, l = length(xb) - 1)
@@ -300,15 +469,24 @@ rootclass_loglikelihood <- function(
 #' weights_multiplier <- runif(length(xmin), 2, 5)
 #' weights_power <- runif(length(xmin), -2, 2)
 #'
-#' L <- rootclass_loglikelihood(par, xmin, xmax, y, weights_multiplier = weights_multiplier, weights_power = weights_power)
-#' J <- rootclass_loglikelihood_jacobian(par, xmin, xmax, y, weights_multiplier = weights_multiplier, weights_power = weights_power)
+#' L <- rootclass_loglikelihood(
+#'   par, xmin, xmax, y, weights_multiplier = weights_multiplier,
+#'   weights_power = weights_power
+#' )
+#' J <- rootclass_loglikelihood_jacobian(
+#'   par, xmin, xmax, y, weights_multiplier = weights_multiplier,
+#'   weights_power = weights_power
+#' )
 #'
 #' eps <- 1e-6
 #' J2 <- rep(0, length(par))
 #' for (i in 1:length(par)) {
 #'   dx <- rep(0, length(par))
 #'   dx[i] <- eps
-#'   J2[i] <- (rootclass_loglikelihood(par + dx, xmin, xmax, y, weights_multiplier = weights_multiplier, weights_power = weights_power) - L)/eps
+#'   J2[i] <- (rootclass_loglikelihood(par + dx, xmin, xmax, y,
+#'     weights_multiplier = weights_multiplier,
+#'     weights_power = weights_power
+#'    ) - L)/eps
 #' }
 #'
 #' J
@@ -319,14 +497,18 @@ rootclass_loglikelihood_jacobian <- function(
     xmin,
     xmax,
     y,
+    fixed = rep(NA, length(par)),
     weights_multiplier = rep(1, length(xmin)),
     weights_power = rep(0, length(xmin))
 ) {
+  # generate vector with all parameters, including fixed
+  parall <- fixed
+  parall[is.na(fixed)] <- par
   # split parameters
-  ns <- (length(par) - 1)/2
+  ns <- (length(parall) - 1)/2
   no <- length(xmin)
-  xb <- par[1:(ns + 1)]
-  b <- par[(ns + 2):(2*ns + 1)]
+  xb <- parall[1:(ns + 1)]
+  b <- parall[(ns + 2):(2*ns + 1)]
   # multipliers
   a <- rootclass_multipliers(xb, b)
   Ja <- rootclass_multipliers_jacobian(xb, b)
@@ -354,7 +536,9 @@ rootclass_loglikelihood_jacobian <- function(
   weights <- y*pw/pi
   weights_par <- y*(pw_par/pi - pw*pi_par/pi^2)
   # loglikelihood derivative
-  colSums(weights_par*(log(pi) - log(pt)) + weights*(pi_par/pi)) - sum(weights)*pt_par/pt
+  J <- colSums(weights_par*(log(pi) - log(pt)) + weights*(pi_par/pi)) - sum(weights)*pt_par/pt
+  # only return derivative with respect to non-fixed values
+  J[is.na(fixed)]
 }
 
 
@@ -371,6 +555,7 @@ rootclass_loglikelihood_jacobian <- function(
 #' @param xb vector with x-breakpoints (length = number of segments + 1)
 #' @param b vector with power law coefficients for each segment
 #' @return a vector with power-law multipliers for each fitted segment
+#' @export
 #' @examples
 #' # check if correct, by checking if probability curve is C^0 continuous
 #' xb <- c(1.5, 3.5, 6.5, 7.5, 8.5)
@@ -399,6 +584,7 @@ rootclass_multipliers <- function(xb, b) {
 #' @inheritParams rootclass_multipliers
 #' @return a list containing the derivatives for each input parameter. Has
 #'   fields `xb` and `b`.
+#' @export
 #' @examples
 #' xb <- seq(1.5, 7.5, l = 4)
 #' b <- seq(-2.5, 2, l = length(xb) - 1)
@@ -465,6 +651,7 @@ rootclass_multipliers_jacobian <- function(xb, b) {
 #' @param a power-law multipliers for each segment, as calculated with the
 #'   function `rootclass_multipliers()`
 #' @return vector with (unscaled) total probabilities
+#' @export
 #' @examples
 #' xb <- c(1.5, 3.5, 6.5, 7.5, 8.5)
 #' a <- seq(2, 4, l = length(xb) - 1)
@@ -510,6 +697,7 @@ rootclass_probobs <- function(
 #' @inheritParams rootclass_probobs
 #' @return a list containing the derivatives for each input parameter. Has
 #'   fields `xb`, `a` and `b`.
+#' @export
 #' @examples
 #' xb <- c(2.2, 3.5, 6.5, 7.5, 8.5)
 #' a <- seq(2, 4, l = length(xb) - 1)
@@ -536,13 +724,19 @@ rootclass_probobs <- function(
 #' for (i in 1:length(a)) {
 #'   dx <- rep(0, length(a))
 #'   dx[i] <- eps
-#'   Ja[, i] <- (rootclass_probobs(xb, a + dx, b, xmin, xmax, weights_multiplier = weights_multiplier, weights_power = weights_power) - p)/eps
+#'   Ja[, i] <- (rootclass_probobs(
+#'     xb, a + dx, b, xmin, xmax, weights_multiplier = weights_multiplier,
+#'     weights_power = weights_power
+#'   ) - p)/eps
 #' }
 #' Jb <- matrix(0, nrow = length(p), ncol = length(b))
 #' for (i in 1:length(b)) {
 #'   dx <- rep(0, length(b))
 #'   dx[i] <- eps
-#'   Jb[, i] <- (rootclass_probobs(xb, a, b + dx, xmin, xmax, weights_multiplier = weights_multiplier, weights_power = weights_power) - p)/eps
+#'   Jb[, i] <- (rootclass_probobs(
+#'     xb, a, b + dx, xmin, xmax, weights_multiplier = weights_multiplier,
+#'     weights_power = weights_power
+#'   ) - p)/eps
 #' }
 #'
 #' J
@@ -596,6 +790,7 @@ rootclass_probobs_jacobian <- function(
 #'
 #' @inheritParams rootclass_probobs
 #' @return vector with (unscaled) total probabilities
+#' @export
 #' @examples
 #' xb <- c(1.5, 3.5, 6.5, 7.5, 8.5)
 #' a <- seq(2, 4, l = length(xb) - 1)
@@ -619,6 +814,7 @@ rootclass_probfit <- function(xb, a, b) {
 #' @inheritParams rootclass_probfit
 #' @return a list containing the derivatives for each input parameter. Has
 #'   fields `xb`, `a` and `b`.
+#' @export
 #' @examples
 #' xb <- c(1.5, 3.5, 6.5, 7.5, 8.5)
 #' a <- seq(2, 4, l = length(xb) - 1)
@@ -650,6 +846,7 @@ rootclass_probfit <- function(xb, a, b) {
 #' Jxb
 #' Ja
 #' Jb
+#'
 rootclass_probfit_jacobian <- function(xb, a, b) {
   ns <- length(b)
   Jtf <- power_integrate_jacobian(b, xb[1:ns], xb[2:(ns + 1)], multiplier = a)
@@ -703,51 +900,5 @@ rootclass_cumulative_observations <- function(xmin, xmax, y) {
     x = xb,
     y = cumsum(c(0, gr*diff(xb)))/sum(y)
   )
-}
-
-
-rootclass_cumulative_plot <- function(
-    df,
-    xmin, xmax, y,
-    n = 101
-) {
-  # assume root count linearly distributed along diameter range
-  tmp <- data.frame(xmin = xmin, xmax = xmax, total = y, gradient = y/(xmax - xmin))
-  xb <- sort(unique(c(xmin, xmax)))
-  nb <- length(xb)
-  t <- outer(tmp$xmin, xb[1:(nb - 1)], ">=") & outer(tmp$xmax, xb[2:nb], "<=")
-  gr <- colSums(tmp$gradient*t)
-  df1 <- data.frame(
-    x = xb,
-    y = cumsum(c(0, gr*diff(xb)))/sum(y)
-  )
-  # fitting trace for fitted data
-  df$total_cum <- cumsum(c(0, df$total))[1:nrow(df)]
-  df2 <- expand_grid_df(data.frame(s = seq(0, 1, l = n)), df)
-  df2$x <- with(df2, xmin + s*(xmax - xmin))
-  df2$y <- with(df2, total_cum + total*ifelse(
-    is_near(power, -1),
-    log(x/xmin)/log(xmax/xmin),
-    (x^(power + 1) - xmin^(power + 1))/(xmax^(power + 1) - xmin^(power + 1))
-  ))
-  # plot
-  ggplot() +
-    theme_bw() +
-    geom_line(
-      data = df1,
-      aes(x = x, y = y),
-      col = "red"
-    ) +
-    geom_point(
-      data = df1,
-      aes(x = x, y = y),
-      col = "red"
-    ) +
-    geom_line(
-      data = df2,
-      aes(x = x, y = y),
-      col = "blue"
-    ) +
-    coord_cartesian(xlim = c(0, NA), ylim = c(0, 1))
 }
 

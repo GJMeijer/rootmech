@@ -43,7 +43,7 @@ power_logtransform_fit <- function(
   # residuals and variance
   logyp <- stats::predict(ft)
   res <- log(y) - logyp
-  sdlog <- sd(res)
+  sdlog <- stats::sd(res)
   # log-probability (assumes normal distribution of residuals)
   logp <- -log(sdlog) - 0.5*log(2*pi) - 0.5*(res/sdlog)^2
   L <- sum(logp)

@@ -34,4 +34,5 @@ J2 <- (L2 - L1)/eps
 J <- copula_gaussian_likelihood_jacobian(rho, px, py)
 
 c(J, J2)
+
 }

@@ -4,7 +4,7 @@
 \alias{power_nls_fit}
 \title{Fit power-law function using least-squares regression}
 \usage{
-power_nls_fit(x, y, weights = rep(1, length(x)), par0 = NULL)
+power_nls_fit(x, y, weights = rep(1, length(x)), guess = NULL)
 }
 \arguments{
 \item{x}{measured x-values (e.g. root diameters). These values are assumed
@@ -17,7 +17,7 @@ parameter.}
 case can be made for weighting with `weights = x^2` because of the
 large effect of thick roots on root-reinforcement}
 
-\item{par0}{vector with initial guess for the power-law multiplier and
+\item{guess}{vector with initial guess for the power-law multiplier and
 power coefficient. If not defined, a guess is made best on linear
 fitting of the log-transformed `x` and `y` data.}
 }

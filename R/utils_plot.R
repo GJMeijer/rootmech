@@ -21,6 +21,7 @@
 #' @param color plot color of text
 #' @param parse if `TRUE`, labels are parsed when plotted
 #' @return ggplot object with added annotation
+#' @export
 #'
 annotate_label <- function(
     plt,
@@ -74,6 +75,7 @@ annotate_label <- function(
 #'   * `lim`: two-parameter vector with min and max limit of the plot range
 #'   * `breaks`: vector with plot breakpoints
 #'
+#' @export
 #' @examples
 #' # data
 #' x <- 10*rnorm(100)
@@ -131,6 +133,7 @@ round_range <- function(
 #' @param x numeric value to convert to character string
 #' @param digits number of significant digits
 #' @return character string
+#' @export
 #' @examples
 #' numeric2character(pi, digits = 4)
 #' numeric2character(sqrt(5)/100000, digits = 3)
@@ -167,6 +170,7 @@ numeric2character <- function(x, digits = 3) {
 #' @return dataframe with fields for labels (`label`), relative position in
 #'   plot (`x`, `y`), text justification (`hjust`, `vjust`) and whether the
 #'   labels should be parsed or not (`parse`)
+#' @export
 #' @examples
 #' create_annotations(
 #'   c(0.23, -0.1),
@@ -229,6 +233,7 @@ create_annotations <- function(
 #' @param color_ann color for text annotations
 #' @param size_ann font size for text annotations
 #' @return list with fields (input parameter names) and values
+#' @export
 #' @examples
 #' plot_settings()
 #'

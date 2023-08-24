@@ -11,7 +11,7 @@ rootcount_cumulative_observations(x)
 }
 \value{
 a dataframe with x-values (`x`) and the cumulative probability
-density (`y`)
+  density (`y`)
 }
 \description{
 Generate a observation-value versus cumulative probability density

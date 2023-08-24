@@ -37,10 +37,10 @@ y <- mu[2] + 3*sd[2]*seq(-1, 1, l = 101)
 # grid
 df <- expand.grid(x = x, y = y, KEEP.OUT.ATTRS = FALSE)
 # probability density, and cumulative probability density
-df$dx <- dnorm(xy$x, mean = mu[1], sd = sd[1])
-df$dy <- dnorm(xy$y, mean = mu[2], sd = sd[2])
-df$px <- pnorm(xy$x, mean = mu[1], sd = sd[1])
-df$py <- pnorm(xy$y, mean = mu[2], sd = sd[2])
+df$dx <- dnorm(df$x, mean = mu[1], sd = sd[1])
+df$dy <- dnorm(df$y, mean = mu[2], sd = sd[2])
+df$px <- pnorm(df$x, mean = mu[1], sd = sd[1])
+df$py <- pnorm(df$y, mean = mu[2], sd = sd[2])
 
 # copula multiplier
 df$cm <- copula_gaussian_multiplier(df$px, df$py, rho = rho)

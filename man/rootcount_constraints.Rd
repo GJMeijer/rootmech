@@ -13,7 +13,7 @@ rootcount_constraints(ns, xmin, xmax, fixed = rep(NA, 2 * ns - 1))
 By default, `xmin = min(x)` and `xmax = max(x)` since this will maximise
 the probability. These values may however be overwritten if required.}
 
-\item{fixed}{vector with `2*ns + 1` elements, with values of the
+\item{fixed}{vector with `2*ns - 1` elements, with values of the
 fitting parameter (`ns - 1` breakpoints, `ns` power-law coefficients)
 that should be fixed and therefore not fitted. Values that are `NA` will
 be fitted while any non-NA will be held constant}

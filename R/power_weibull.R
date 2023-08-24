@@ -89,8 +89,8 @@ power_weibull_fit <- function(
   # log-likelihood fit
   ft <- stats::optim(
     guess,
-    power_weibull_likelihood,
-    gr = power_weibull_likelihood_jacobian,
+    power_weibull_loglikelihood,
+    gr = power_weibull_loglikelihood_jacobian,
     method = "BFGS",
     lx = log(x), ly = log(y), weights = weights,
     control = list(fnscale = -1)
@@ -260,8 +260,9 @@ power_weibull_plot <- function(
 #' @param lx,ly vectors with log-transformed x and y measurements
 #' @param weights weighting for each measurement
 #' @return log-likelihood score
+#' @export
 #'
-power_weibull_likelihood <- function(
+power_weibull_loglikelihood <- function(
     par,
     lx,
     ly,
@@ -280,16 +281,17 @@ power_weibull_likelihood <- function(
 }
 
 
-#' Derivative of function `power_weibull_likelihood()`
+#' Derivative of function `power_weibull_loglikelihood()`
 #'
 #' @description
 #' Generates the derivative of the results of the function
-#' `power_weibull_likelihood()` with respect to its input argument `par`.
+#' `power_weibull_loglikelihood()` with respect to its input argument `par`.
 #'
 #' Function is vectorised.
 #'
-#' @inheritParams power_weibull_likelihood
+#' @inheritParams power_weibull_loglikelihood
 #' @return vector with derivatives with respect to `par`
+#' @export
 #' @examples
 #' # Compare analytical and numberical jacobians
 #' x <- seq(1, 10, l = 51)
@@ -299,26 +301,26 @@ power_weibull_likelihood <- function(
 #' par <- c(log(3), -0.2, log(3.4))
 #' weights <- x
 #'
-#' J <- power_weibull_likelihood_jacobian(
+#' J <- power_weibull_loglikelihood_jacobian(
 #'   par, lx, ly, weights = weights
 #' )
 #'
 #' eps <- 1e-6
-#' L <- power_weibull_likelihood(
+#' L <- power_weibull_loglikelihood(
 #'   par, lx, ly, weights = weights
 #' )
 #' J2 <- rep(NA, 3)
 #' for (i in 1:3) {
 #'   dx <- rep(0, 3)
 #'   dx[i] <- dx[i] + eps
-#'   J2[i] <- (power_weibull_likelihood(
+#'   J2[i] <- (power_weibull_loglikelihood(
 #'     par + dx, lx, ly, weights = weights) - L)/eps
 #' }
 #'
 #' J
 #' J2
 #'
-power_weibull_likelihood_jacobian <- function(
+power_weibull_loglikelihood_jacobian <- function(
     par,
     lx,
     ly,
@@ -369,6 +371,7 @@ power_weibull_likelihood_jacobian <- function(
 #' distribution.
 #' @param x,y arrays with measured values
 #' @return vector with three elements, see Description
+#' @export
 #' @examples
 #' # input data
 #' nr <- 51
@@ -457,6 +460,25 @@ power_weibull_predictioninterval <- function(
 }
 
 
+#' Log-tranformed Weibull probability with power-law scale parameter
+#'
+#' @description
+#' Calculate the log-transformed Weibull probability, where the scale parameter
+#' of the distribution follows a power-law curve with `x` in the shape
+#'
+#'   y = alpha*x^power.
+#'
+#' The alpha parameter is related to the multiplier of the best power-law
+#' fit through the mean of the Weibull distribution, i.e.
+#'
+#'   alpha = gamma(1 + 1/shape)*multiplier
+#'
+#' @inheritParams power_weibull_fit
+#' @param alpha vector with alpha-values
+#' @param power vector with power-law power coefficients
+#' @param shape vector with Weibull shape parameters
+#' @return vector with log-transformed probabilities for each x,y observation
+#' @export
 #' @examples
 #' multiplier <- 10
 #' power <- -0.5
@@ -470,6 +492,7 @@ power_weibull_predictioninterval <- function(
 #'
 #' exp(log(p))
 #' p
+#'
 power_weibull_logdensity <- function(x, y, alpha, power, shape) {
   log(shape) +
     -shape*log(alpha) +
@@ -479,6 +502,19 @@ power_weibull_logdensity <- function(x, y, alpha, power, shape) {
 }
 
 
+#' Derivative of function `power_weibull_logdensity()`
+#'
+#' @description
+#' Generates the derivative of the results of the function
+#' `power_weibull_logdensity()` with respect to its input arguments `alpha`,
+#' `power` and `shape`
+#'
+#' Function is vectorised.
+#'
+#' @inheritParams power_weibull_logdensity
+#' @return list with fields `alpha`, `power` and `shape`, containing jacobian
+#'   matrices for these input arguments
+#' @export
 #' @examples
 #' multiplier <- 9.2
 #' power <- -0.41
@@ -514,7 +550,7 @@ power_weibull_logdensity_jacobian <- function(x, y, alpha, power, shape) {
 }
 
 
-power_weibull_likelihood2 <- function(
+power_weibull_loglikelihood2 <- function(
     par,
     x,
     y,
@@ -524,7 +560,7 @@ power_weibull_likelihood2 <- function(
   sum(weights*p)
 }
 
-power_weibull_likelihood2_jacobian <- function(
+power_weibull_loglikelihood2_jacobian <- function(
     par,
     x,
     y,
@@ -538,67 +574,3 @@ power_weibull_likelihood2_jacobian <- function(
   )
 }
 
-power_weibull_initialguess2 <- function(x, y) {
-  # linear fit through log-transformed x, y data to obtain a and b for power-law fit
-  ft1 <- stats::lm(log(y) ~ log(x))
-  a <- exp(ft1$coef[1])
-  b <- ft1$coef[2]
-  # get weibull shape parameter - crude guess using linear fitting on
-  # log-transformed cumulative probability curve
-  t <- y/exp(stats::predict(ft1))
-  c <- seq(0.01, 0.99, l = length(t))
-  ft2 <- stats::lm(log(-log(1 - c)) ~ log(sort(t)))
-  k <- ft2$coef[2]
-  # return
-  as.vector(c(a/gamma(1 + 1/k), b, k))
-}
-#' @examples
-#' # input parameters
-#' x <- seq(1, 10, l = 101)
-#' alpha <- 5
-#' beta <- -0.4
-#' kappa <- 4
-#' y <- alpha*x^beta*rweibull(length(x), kappa, 1/gamma(1 + 1/kappa))
-#'
-#' # fit
-#' ft1 <- power_weibull_fit(x, y)
-#' ft2 <- power_weibull_fit2(x, y)
-#'
-#' ft1
-#' ft2
-power_weibull_fit2 <- function(
-    x,
-    y,
-    weights = rep(1, length(x)),
-    guess = NULL
-) {
-  # do not use any observations with NA values in x and/or y
-  i <- !(is.na(x) | is.na(y))
-  x <- x[i]
-  y <- y[i]
-  weights <- weights[i]
-  # make guess if needed
-  if (is.null(guess)) {
-    guess <- power_weibull_initialguess2(x, y)
-  }
-  # log-likelihood fit
-  ft <- stats::optim(
-    guess,
-    power_weibull_likelihood2,
-    gr = power_weibull_likelihood2_jacobian,
-    method = "L-BFGS-B",
-    x = x,
-    y = y,
-    weights = weights,
-    control = list(fnscale = -1),
-    lower = c(0.1, -Inf, 0.1),
-    upper = c(Inf, Inf, Inf)
-  )
-  # return
-  data.frame(
-    loglikelihood = ft$value,
-    multiplier = ft$par[1]*gamma(1 + 1/ft$par[3]),
-    power = ft$par[2],
-    shape = ft$par[3]
-  )
-}

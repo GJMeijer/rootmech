@@ -42,7 +42,7 @@ power_nls_fit <- function(
     y ~ a*x^b,
     start = list(a = guess[1], b = guess[2])
   )
-  par <- as.vector(coef(ft1))
+  par <- as.vector(stats::coef(ft1))
   # residuals and variance
   yp <- stats::predict(ft1)
   res <- y - yp
@@ -108,7 +108,7 @@ power_nls_predictioninterval <- function(
   # generate fit
   df$mean <- multiplier*df$x^power
   # distance
-  m <- qnorm(0.5 + 0.5*confidence, mean = 0, sd = sd)
+  m <- stats::qnorm(0.5 + 0.5*confidence, mean = 0, sd = sd)
   # lower and upper prediction interval
   df$lower <- df$mean - m
   df$upper <- df$mean + m

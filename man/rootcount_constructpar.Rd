@@ -20,6 +20,6 @@ Generate a single vector with fitting parameters and known ('fixed')
 parameters for root count fitting.
 }
 \examples{
-rootcount_construct_par(c(1,2,3), fixed = c(NA, 5, NA, NA, 6))
+rootcount_constructpar(c(1,2,3), fixed = c(NA, 5, NA, NA, 6))
 
 }

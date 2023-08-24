@@ -255,6 +255,7 @@ copula_gaussian_likelihood <- function(
 #' J <- copula_gaussian_likelihood_jacobian(rho, px, py)
 #'
 #' c(J, J2)
+#'
 copula_gaussian_likelihood_jacobian <- function(
     rho,
     px,
@@ -297,6 +298,7 @@ copula_gaussian_initialguess <- function(px, py) {
 #'   instead
 #' @return vector with gaussian copula multipliers for each pair of `px` and
 #' `py`.
+#' @export
 #' @examples
 #' # input
 #' rho <- 0.8
@@ -310,10 +312,10 @@ copula_gaussian_initialguess <- function(px, py) {
 #' # grid
 #' df <- expand.grid(x = x, y = y, KEEP.OUT.ATTRS = FALSE)
 #' # probability density, and cumulative probability density
-#' df$dx <- dnorm(xy$x, mean = mu[1], sd = sd[1])
-#' df$dy <- dnorm(xy$y, mean = mu[2], sd = sd[2])
-#' df$px <- pnorm(xy$x, mean = mu[1], sd = sd[1])
-#' df$py <- pnorm(xy$y, mean = mu[2], sd = sd[2])
+#' df$dx <- dnorm(df$x, mean = mu[1], sd = sd[1])
+#' df$dy <- dnorm(df$y, mean = mu[2], sd = sd[2])
+#' df$px <- pnorm(df$x, mean = mu[1], sd = sd[1])
+#' df$py <- pnorm(df$y, mean = mu[2], sd = sd[2])
 #'
 #' # copula multiplier
 #' df$cm <- copula_gaussian_multiplier(df$px, df$py, rho = rho)
@@ -346,6 +348,7 @@ copula_gaussian_multiplier <- function(px, py, rho = 0, log = FALSE) {
 #'
 #' @inheritParams copula_gaussian_multiplier
 #' @return list with derivatives, with fieldnames `px`, `py` and `rho`.
+#' @export
 #' @examples
 #' px <- 0.1
 #' py <- 0.2

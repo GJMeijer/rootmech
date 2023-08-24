@@ -58,7 +58,7 @@ solution.
 }
 \examples{
 # input parameters
-x <- seq(1, 10, l = 251)
+x <- seq(1, 10, l = 101)
 alpha <- 5
 beta <- -0.4
 kappa <- 4
@@ -73,4 +73,11 @@ xp <- seq(min(x), max(x), l = 101)
 yp <- ft$multiplier*xp^ft$power
 plot(x, y)
 lines(xp, yp, col = "red")
+
+# compare likelihood scores
+y2 <- ft$multiplier*x^ft$power
+p <- dweibull(y/y2, shape = ft$shape, scale = 1/gamma(1 + 1/ft$shape))
+
+ft$loglikelihood
+sum(log(p))
 }

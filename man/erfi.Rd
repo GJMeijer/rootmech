@@ -17,4 +17,5 @@ Calculate the value of the inverse error function
 }
 \examples{
 erfi(0.5)
+
 }
