@@ -46,12 +46,12 @@ power_nls_fit <- function(
   # residuals and variance
   yp <- stats::predict(ft1)
   res <- y - yp
-  sd <- sd(res)
+  sd <- sqrt(sum(weights*res^2)/sum(weights))
   # estimate for unadjusted R^2
   r2 <- 1 - sum(res^2)/sum((y - mean(y))^2)
   # log-probability (assumes normal distribution of residuals)
   logp <- -log(sd) - 0.5*log(2*pi) - 0.5*(res/sd)^2
-  L <- sum(logp)
+  L <- sum(weights*logp)
   # return
   data.frame(
     r2 = r2,

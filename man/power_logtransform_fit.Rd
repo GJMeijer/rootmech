@@ -49,4 +49,7 @@ yp <- ft$multiplier*xp^ft$power
 plot(x, y)
 lines(xp, yp)
 
+# test if average of fit OK
+yp2 <- ft$multiplier*x^ft$power
+mean(y/yp2)
 }

@@ -32,6 +32,9 @@
 #' plot(x, y)
 #' lines(xp, yp)
 #'
+#' # test if average of fit OK
+#' yp2 <- ft$multiplier*x^ft$power
+#' mean(y/yp2)
 power_logtransform_fit <- function(
     x,
     y,
@@ -43,10 +46,10 @@ power_logtransform_fit <- function(
   # residuals and variance
   logyp <- stats::predict(ft)
   res <- log(y) - logyp
-  sdlog <- stats::sd(res)
+  sdlog <- sqrt(sum(weights*res^2)/sum(weights))
   # log-probability (assumes normal distribution of residuals)
   logp <- -log(sdlog) - 0.5*log(2*pi) - 0.5*(res/sdlog)^2
-  L <- sum(logp)
+  L <- sum(weights*logp)
   # return
   data.frame(
     r2 = summary(ft)$r.squared,

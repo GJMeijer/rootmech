@@ -76,8 +76,9 @@ lines(xp, yp, col = "red")
 
 # compare likelihood scores
 y2 <- ft$multiplier*x^ft$power
-p <- dweibull(y/y2, shape = ft$shape, scale = 1/gamma(1 + 1/ft$shape))
+p <- dweibull(y/y2, ft$shape, 1/gamma(1 + 1/ft$shape))
 
 ft$loglikelihood
 sum(log(p))
+
 }

@@ -68,10 +68,11 @@
 #'
 #' # compare likelihood scores
 #' y2 <- ft$multiplier*x^ft$power
-#' p <- dweibull(y/y2, shape = ft$shape, scale = 1/gamma(1 + 1/ft$shape))
+#' p <- dweibull(y/y2, ft$shape, 1/gamma(1 + 1/ft$shape))
 #'
 #' ft$loglikelihood
 #' sum(log(p))
+#'
 power_weibull_fit <- function(
     x,
     y,
@@ -92,15 +93,25 @@ power_weibull_fit <- function(
     power_weibull_loglikelihood,
     gr = power_weibull_loglikelihood_jacobian,
     method = "BFGS",
-    lx = log(x), ly = log(y), weights = weights,
+    lx = log(x),
+    ly = log(y),
+    weights = weights,
     control = list(fnscale = -1)
   )
+  # parameters
+  multiplier <- exp(ft$par[1])*gamma(1 + 1/exp(ft$par[3]))
+  power <- ft$par[2]
+  shape <- exp(ft$par[3])
+  # likelihood
+  rel <- y/(multiplier*x^power)
+  p <- stats::dweibull(rel, shape = shape, scale = 1/gamma(1 + 1/shape))
+  loglikelihood <- sum(weights*log(p))
   # return
   data.frame(
-    loglikelihood = ft$value,
-    multiplier = exp(ft$par[1])*gamma(1 + 1/exp(ft$par[3])),
-    power = ft$par[2],
-    shape = exp(ft$par[3])
+    loglikelihood = loglikelihood,
+    multiplier = multiplier,
+    power = power,
+    shape = shape
   )
 }
 
