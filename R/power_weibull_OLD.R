@@ -560,3 +560,246 @@ power_weibull_logdensity_jacobian <- function(x, y, alpha, power, shape) {
   )
 }
 
+
+power_weibull_loglikelihood2 <- function(
+    par,
+    x,
+    y,
+    weights = rep(1, length(x))
+) {
+  p <- power_weibull_logdensity(x, y, par[1], par[2], par[3])
+  sum(weights*p)
+}
+
+power_weibull_loglikelihood2_jacobian <- function(
+    par,
+    x,
+    y,
+    weights = rep(1, length(x))
+) {
+  J <- power_weibull_logdensity_jacobian(x, y, par[1], par[2], par[3])
+  c(
+    sum(weights*J$alpha),
+    sum(weights*J$power),
+    sum(weights*J$shape)
+  )
+}
+
+
+
+#' @examples
+#' x <- seq(2, 10, l = 101)
+#' a <- 5
+#' b <- -0.6
+#' k <- 4
+#' y <- a*x^b*rweibull(length(x), k, 1/gamma(1 + 1/k))
+#' weights = rep(1, length(x))
+#'
+#' ft <- power_weibull_fit(x, y, weights = weights)
+#' b <- ft$power
+#' k <- ft$shape
+power_weibull2 <- function(
+    x,
+    y,
+    weights = rep(1, length(x))
+) {
+  # multiplier
+  fa <- function(b, k) {
+    (sum(weights*y^k*x^(-b*k))/sum(weights))^(1/k)
+  }
+  # derivative of multiplier
+  fa_jac <- function(b, k) {
+    a <- fa(b, k)
+    c(
+      -sum(weights*y^k*x^(-b*k)*log(x))/(a^(k - 1)*sum(weights)),
+      sum(weights*(log(y) - b*log(x))*y^k*x^(-b*k))/(k*a^(k - 1)*sum(weights)) - a*log(a)/k
+    )
+  }
+  a1 <- fa(b, k)
+  a2 <- fa(b + eps, k)
+  a3 <- fa(b, k + eps)
+  (c(a2, a3) - a1)/eps
+  fa_jac(b, k)
+
+  fr1 <- function(b, k) {
+    sum(weights)*sum(weights*y^k*x^(-b*k)*log(x)) -
+      sum(weights*log(x))*sum(weights*y^k*x^(-b*k))
+  }
+  fr1_jac <- function(b, k) {
+    c(
+      -k*sum(weights)*sum(weights*y^k*x^(-b*k)*log(x)^2) +
+        k*sum(weights*log(x))*sum(weights*y^k*x^(-b*k)*log(x)),
+      sum(weights)*sum(weights*y^k*x^(-b*k)*log(x)*(log(y) - b*log(x))) -
+        sum(weights*log(x))*sum(weights*y^k*x^(-b*k)*(log(y) - b*log(x)))
+    )
+  }
+  eps <- 1e-6
+  r11 <- fr1(b, k)
+  r12 <- fr1(b + eps, k)
+  r13 <- fr1(b, k + eps)
+  (c(r12, r13) - r11)/eps
+  fr1_jac(b, k)
+
+  ak <- function(b, k) {
+    sum(weights*y^k*x^(-b*k))/sum(weights)
+  }
+  ak_jac <- function(b, k) {
+    c(
+      -k*sum(weights*y^k*x^(-b*k)*log(x))/sum(weights),
+      sum(weights*y^k*x^(-b*k)*(log(y) - b*log(x)))/sum(weights)
+    )
+  }
+  eps <- 1e-6
+  ak1 <- ak(b, k)
+  ak2 <- ak(b + eps, k)
+  ak3 <- ak(b, k + eps)
+  (c(ak2, ak3) - ak1)/eps
+  ak_jac(b, k)
+
+  fr2 <- function(b, k) {
+    a <- ak(b, k)
+
+  }
+
+  a <- sum(weights*y^k*x^(-b*k))/sum(weights)
+  da_db <- -k*sum(weights*y^k*x^(-b*k)*log(x))/sum(weights)
+  da_dk <- sum(weights*y^k*x^(-b*k)*(log(y) - b*log(x)))/sum(weights)
+  r1 <- sum(weights*y^k*x^(-b*k)*log(x)) - a*sum(weights*log(x))
+  r1_da <- -sum(weights*log(x))
+  r1_db <- -k*sum(weights*y^k*x^(-b*k)*log(x)^2)
+  r1_dk <- sum(weights*y^k*x^(-b*k)*log(x)*(log(y) - b*log(x)))
+  r2 <- a/k*sum(weights) + sum(weights*(log(y) - k*log(x) - log(a)/k)*(a - y^k*x^(-b*k)))
+  r2_da <- 1/k*sum(weights) + sum(weights*(-1/(a*k)*(a - y^k*x^(-b*k)))) + sum(weights*(log(y) - k*log(x) - log(a)/k))
+  r2_db <- sum(weights*(log(y) - k*log(x) - log(a)/k)*(k*y^k*x^(-b*k)*log(x)))
+  r2_dk <- -a/k^2*sum(weights) + sum(weights*(-log(x) + log(a)/k^2)*(a - y^k*x^(-b*k))) + sum(weights*(log(y) - k*log(x) - log(a)/k)*(-y^k*x^(-b*k)*(log(y) - b*log(x))))
+}
+
+froot <- function(par, x, y, weights = rep(1, length(x))) {
+  b <- par[1]
+  k <- par[2]
+  a <- sum(weights*y^k*x^(-b*k))/sum(weights)
+  r1 <- sum(weights*y^k*x^(-b*k)*log(x)) - a*sum(weights*log(x))
+  r2 <- a/k*sum(weights) + sum(weights*(log(y) - k*log(x) - log(a)/k)*(a - y^k*x^(-b*k)))
+  c(r1, r2)
+}
+froot_jac <- function(par, x, y, weights = rep(1, length(x))) {
+  b <- par[1]
+  k <- par[2]
+  a <- sum(weights*y^k*x^(-b*k))/sum(weights)
+  da_db <- -k*sum(weights*y^k*x^(-b*k)*log(x))/sum(weights)
+  da_dk <- sum(weights*y^k*x^(-b*k)*(log(y) - b*log(x)))/sum(weights)
+  r1_da <- -sum(weights*log(x))
+  r1_db <- -k*sum(weights*y^k*x^(-b*k)*log(x)^2)
+  r1_dk <- sum(weights*y^k*x^(-b*k)*log(x)*(log(y) - b*log(x)))
+  r2_da <- 1/k*sum(weights) + sum(weights*(-1/(a*k)*(a - y^k*x^(-b*k)))) + sum(weights*(log(y) - k*log(x) - log(a)/k))
+  r2_db <- sum(weights*(log(y) - k*log(x) - log(a)/k)*(k*y^k*x^(-b*k)*log(x)))
+  r2_dk <- -a/k^2*sum(weights) + sum(weights*(-log(x) + log(a)/k^2)*(a - y^k*x^(-b*k))) + sum(weights*(log(y) - k*log(x) - log(a)/k)*(-y^k*x^(-b*k)*(log(y) - b*log(x))))
+  matrix(
+    c(r1_db + r1_da*da_db, r1_dk + r1_da*da_dk,
+      r2_db + r2_da*da_db, r2_dk + r2_da*da_dk),
+    nrow = 2,
+    ncol = 2,
+    byrow = TRUE
+  )
+}
+if (FALSE) {
+  r0 <- froot(c(b, k), x, y, weights)
+  r1a <- froot(c(b + eps, k), x, y, weights)
+  r1b <- froot(c(b, k + eps), x, y, weights)
+  cbind(r1a - r0, r1b - r0)/eps
+  froot_jac(c(b, k), x, y, weights)
+}
+
+#' @examples
+#' x <- seq(2, 10, l = 101)
+#' a <- 5
+#' b <- -1
+#' k <- 4
+#' y <- a*x^b*rweibull(length(x), k, 1/gamma(1 + 1/k))
+#' weights <- rep(1, length(x))
+#' power_weibull_fit(x, y)
+#' power_weibull_fit3(x, y)
+#' plot(x, y)
+power_weibull_fit3 <- function(
+    x,
+    y,
+    weights = rep(1, length(x))
+) {
+  # initial guess
+  ft1 <- lm(log(y) ~ log(x), weights = weights)
+  b <- as.numeric(ft1$coefficients[2])
+  n <- length(x)
+  t <- y/exp(stats::predict(ft1))
+  c <- seq(0.5/n, 1 - 0.5/n, l = length(x))
+  ft2 <- stats::lm(log(-log(1 - c)) ~ log(sort(t)))
+  k <- as.numeric(ft2$coef[2])
+  # fit
+  sol <- rootSolve::multiroot(
+    froot,
+    c(b, k),
+    jacfunc = froot_jac,
+    x = x,
+    y = y,
+    weights = weights
+  )
+  b <- sol$root[1]
+  k <- sol$root[2]
+  m <- (sum(weights*y^k*x^(-b*k))/sum(weights))^(1/k)*gamma(1 + 1/k)
+  l <- m*x^b/gamma(1 + 1/k)
+  logp <- log(k) - k*log(l) + (k - 1)*log(y) - (y/l)^k
+  data.frame(
+    loglikelihood = sum(weights*logp),
+    multiplier = m,
+    power = b,
+    shape = k
+  )
+}
+
+power_weibull_fit3(x, y)
+power_weibull_fit(x, y)
+
+microbenchmark::microbenchmark(
+  a = power_weibull_fit(x, y),
+  b = power_weibull_fit3(x, y)
+)
+
+
+
+rootsolve_newton <- function(
+    par0,
+    f,
+    fprime,
+    rtol = 1e-6,
+    atol = 1e-8,
+    ctol = 1e-8,
+    ...
+) {
+  precis <- NULL
+  par <- par0
+  jacob <- matrix(nrow = N, ncol = N, data = 0)
+  reffx <- f(par, ...)
+  for (i in 1:maxiter) {
+    refx <- par
+    pp <- mean(abs(reffx))
+    precis <- c(precis, pp)
+    ewt <- rtol * abs(x) + atol
+    if (max(abs(reffx/ewt)) < 1)
+      break
+    delt <- perturb(par)
+    for (j in 1:N) {
+      par[j] <- par[j] + delt[j]
+      if (is.null(parms))
+        fx <- f(x, ...)
+      else fx <- f(x, parms, ...)
+      jacob[, j] <- (fx - reffx)/delt[j]
+      x[j] <- refx[j]
+    }
+    relchange <- as.numeric(solve(jacob, -1 * reffx))
+    if (max(abs(relchange)) < ctol)
+      break
+    x <- x + relchange
+    if (is.null(parms))
+      reffx <- f(x, ...)
+    else reffx <- f(x, parms, ...)
+  }
+}
