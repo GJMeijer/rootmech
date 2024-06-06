@@ -1,0 +1,292 @@
+---
+title: "power_weibull_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_weibull_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
+
+$$
+\bar{y} = y_0 x^\beta
+$$
+
+Using the definition of the mean of the Weibull distribution, at each value of $x$ the following must satisfied:
+
+$$
+\lambda \Gamma\left(1 + \frac{1}{\kappa}\right) = y_0 x^\beta
+$$
+
+Where $\kappa$ and $\lambda$ are the shape and scale parameter describing the Weibull probability distribution. Therefore, $\lambda$ can be written as:
+
+$$ 
+\lambda = \frac{y_0 x^\beta}{\Gamma\left(1 + \frac{1}{\kappa}\right)}
+$$
+
+In the rest of this derivation, the following shorthand is used to simplify writing expressions:
+
+$$
+\Gamma = \Gamma\left(1 + \frac{1}{\kappa}\right)
+$$
+
+The probability $p$ following the Weibull distribution:
+
+$$ 
+p = \frac{\kappa}{\lambda} \left(\frac{y}{\lambda}\right)^{\kappa-1} \exp\left[-\left(\frac{y}{\lambda}\right)^\kappa\right]
+$$
+
+which, with the above expressions, can be rewritten as:
+
+$$
+p = \kappa \left( \frac{\Gamma}{y_0 x^\beta} \right)^\kappa y^{\kappa - 1}
+\exp\left[-\left(\frac{y \Gamma}{y_0 x^\beta}\right)^\kappa \right] 
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$ and $\kappa$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = 
+\left(\log \kappa - \kappa \log y_0 + \kappa \log \Gamma \right) \sum w - 
+\beta \kappa \sum w \log x + 
+(\kappa - 1) \sum w \log y - 
+\left(\frac{\Gamma}{y_0}\right)^\kappa \sum \frac{w y^\kappa}{x^{\beta \kappa}}
+$$
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w \log x
+$$
+
+$$ c_3 = \sum w \log y $$ $$
+c_4 = \sum w x^{-\beta\kappa} y^\kappa
+\qquad
+\frac{\partial c_4}{\partial \beta} = -\kappa c_5
+\qquad
+\frac{\partial c_4}{\partial \kappa} = -\beta c_5 + c_6
+$$
+
+$$ 
+c_5 = \sum w x^{-\beta\kappa} y^\kappa \log x
+\qquad
+\frac{\partial c_5}{\partial \beta} = -\kappa c_7
+\qquad
+\frac{\partial c_5}{\partial \kappa} = -\beta c_7 + c_8
+$$
+
+$$ 
+c_6 = \sum w x^{-\beta\kappa} y^\kappa \log y 
+\qquad
+\frac{\partial c_6}{\partial \beta} = -\kappa c_8
+\qquad
+\frac{\partial c_6}{\partial \kappa} = -\beta c_8 + c_9
+$$
+
+$$ 
+c_7 = \sum w x^{-\beta\kappa} y^\kappa \log^2 x 
+$$
+
+$$ 
+c_8 = \sum w x^{-\beta\kappa} y^\kappa \log x \log y 
+$$
+
+$$ 
+c_9 = \sum w x^{-\beta\kappa} y^\kappa \log^2 y 
+$$
+
+There coefficients are functions of fitting parameters $\beta$ and $\kappa$, and observations $x$,$y$ only. With these definitions, the loglikelihood can be written as:
+
+$$
+\log\mathcal{L} = 
+\left( \log\kappa - \kappa \log y_0 + \kappa \log \Gamma \right) c_1
+- \beta \kappa c_2
++ (\kappa - 1) c_3
+- \left(\frac{\Gamma}{y_0}\right)^\kappa c_4
+$$
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $y_0$, $\beta$ and $\kappa$ are zero.
+
+The partial derivative with respect to $y_0$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{-c_1 \kappa}{y_0} + c_4 \kappa \Gamma^\kappa y_0^{-\kappa - 1}
+$$
+
+Solving this for $y_0$ gives:
+
+$$
+y_0 = \Gamma\left(1 + 1\frac{1}{\kappa}\right) \left(\frac{c_4}{c_1}\right)^{1/\kappa}
+$$
+
+Substituting this result back into the loglikelihood expression:
+
+$$
+\log\mathcal{L} = 
+c_1 \left( \log \kappa - \log c_4 + \log c_1 - 1 \right) - \beta \kappa c_2 + (\kappa - 1) c_3
+$$
+
+The partial derivative with respect to $\beta$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\beta} =
+\kappa \left( \frac{c_1 c_5}{c_4} - c_2 \right) =
+0
+$$
+
+And similarly the partial derivative with respect to $\kappa$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\kappa} =
+c_1 \left(\frac{1}{\kappa} + \frac{\beta c_5 - c_6}{c_4} \right) - \beta c_2 + c_3 = 
+0
+$$
+
+These two equations can be simultaneously solved to find the final unknowns $\beta$ and $\kappa$. When using gradient descent methods, the second-order partial derivatives equal:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\beta^2} = 
+\frac{c_1 \kappa^2}{c_4} \left(\frac{c_5^2}{c_4} - c_7 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\beta \partial\kappa} = 
+\frac{c_1}{c_4} \left[c_5 - \beta \kappa c_7 + \kappa c_8 + \frac{\kappa c_5}{c_4} \left( \frac{\beta c_5}{c_4} - c_6 \right) \right] - c_2
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\kappa^2} = 
+c_1 \left[ \frac{-1}{\kappa^2} - \frac{(\beta^2 c_7 - 2 \beta c_8 + c_9)}{c_4} + \frac{(\beta c_5 - c_6)^2}{c_4^2} \right]
+$$
+
+# Initial guess
+
+We should make an informed initial guess for fitting parameters $y_0$, $\beta$ and $\kappa$ in order to speed up solving the problem.
+
+We can estimate $\beta$ based on linear regression on log-transformed $x$ and $y$ values.
+
+The other parameters can be estimated by fitting the linearised cumulative density function of scaled parameter $z = y/x^\beta$. The cumulative density function is given by:
+
+$$ 
+F = 1 - \exp\left[-\left( \frac{z}{\lambda} \right)^\kappa \right]
+$$
+
+In linearised form:
+
+$$ 
+\log\left[-\log\left(1 - F\right)\right] = \kappa \log z - \kappa \log \lambda
+$$
+
+Using the intercept ($a$) and gradient ($b$) of this fit, initial guesses for $y_0$ and $\kappa$ can be made as follows:
+
+$$
+\kappa \approx b 
+$$
+
+$$
+y_0 \approx \Gamma\left(1 + \frac{1}{b} \right) \exp\left(-\frac{a}{b}\right)
+$$
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{-c_1 \kappa}{y_0} + \kappa c_4 \Gamma^\kappa y_0^{-\kappa - 1}
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+-\kappa c_2 + \kappa c_5 \left( \frac{\Gamma}{y_0}\right)^\kappa 
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \kappa} = 
+c_1 \left[ \frac{1}{\kappa} + \log\left(\frac{\Gamma}{y_0}\right) - \frac{\psi}{\kappa} \right] -
+\beta c_2 + c_3 -
+\left(\frac{\Gamma}{y_0}\right)^\kappa \left[ c_4 \left(\log\left(\frac{\Gamma}{y_0}\right) - \frac{\psi}{\kappa}\right) - \beta c_5 + c_6 \right]
+$$
+
+where $\psi$ indicates the result of the digamma function for $1 + 1/\kappa$.
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0^2} = 
+\frac{c_1 \kappa}{y_0^2} - \kappa \left(\kappa + 1\right) c_4 \Gamma^\kappa y_0^{-\kappa - 2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \beta} = 
+-\kappa^2 c_5 \Gamma^\kappa y_0^{-\kappa - 1}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \kappa} = 
+\frac{-c_1}{y_0} + \Gamma^\kappa y_0^{-\kappa - 1} \left[
+c_4 \left(1 + \kappa \log\left(\frac{\Gamma}{y_0}\right) - \psi \right) +
+\kappa (c_6 - \beta c_5) \right]
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+-\kappa^2 c_7 \left(\frac{\Gamma}{y_0}\right)^\kappa
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta \partial \kappa} = 
+-c_2 + \left(\frac{\Gamma}{y_0}\right)^\kappa \left[
+c_5 \left(1 + \kappa \log\left(\frac{\Gamma}{y_0}\right) - \psi \right) + 
+\kappa \left(c_8 - \beta c_7 \right) \right]
+$$
+
+$$
+\begin{split}
+\frac{\partial^2\log\mathcal{L}}{\partial \kappa^2} = 
+\frac{c_1}{\kappa^2} \left(\frac{\psi^{(1)}}{\kappa} - 1 \right) - 
+2 \left(\frac{\Gamma}{y_0}\right)^\kappa 
+\left(\log\left(\frac{\Gamma}{y_0}\right) - \frac{\psi}{\kappa}\right)
+\left(c_6 - \beta c_5 \right) \\
+\left(\frac{\Gamma}{y_0}\right)^\kappa 
+\left(\log\left(\frac{\Gamma}{y_0}\right) - \frac{\psi}{\kappa}\right)^2 c_4 - \\
+\left(\frac{\Gamma}{y_0}\right)^\kappa 
+\left(\frac{c_4 \psi^{(1)}}{\kappa^3} + \beta^2 c_7 - 2 \beta c_8 + c_9 \right)
+\end{split}
+$$
+
+where $\psi^{(1)}$ is the result of the first derivative of the digamma function for the argument $1 + 1/\kappa$.

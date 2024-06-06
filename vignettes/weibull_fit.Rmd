@@ -1,0 +1,144 @@
+---
+title: "weibull_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{weibull_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Problem definition
+
+We want to fit a series of $x$ using a Weibull distribution, defined by shape parameter $\kappa$ and scale parameter $\lambda$. The probability distribution is given by:
+
+$$ 
+p = \frac{\kappa}{\lambda} \left(\frac{x}{\lambda}\right)^{\kappa - 1} \exp\left[-\left(\frac{x}{\lambda}\right)^\kappa\right] 
+$$
+
+And the log-transformed probability:
+
+$$ 
+\log p = \log \kappa - \kappa \log\lambda + \left(\kappa - 1\right)\log x - \left(\frac{x}{\lambda}\right)^\kappa 
+$$
+
+So the (weighted) loglikelihood that is to be maximized:
+
+$$ 
+\log\mathcal{L} = \sum w \log p = \log\kappa \sum w - \kappa\log\lambda \sum w + (\kappa-1)\sum w\log x - \frac{1}{\lambda^\kappa}\sum w x^\kappa 
+$$
+
+where $w$ is the weighting for each observation.
+
+# Loglikelihood solving
+
+At the maximum likelihood, the partial derivative with respect to $\kappa$ and $\lambda$ must be zero:
+
+$$ 
+\frac{\partial\log\mathcal{L}}{\partial\kappa} = 
+    \frac{\sum w}{\kappa} 
+    -\log \lambda \sum w
+    +\sum w \log x 
+    -\sum w \log\left(\frac{x}{\lambda}\right) \left(\frac{x}{\lambda}\right)^{\kappa} = 0 
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\lambda} = -\frac{\kappa \sum w}{\lambda} + \frac{\kappa}{\lambda^{\kappa + 1}} \sum w x^\kappa = 0 
+$$
+
+The partial derivative with respect to $\lambda$ can be solved for $\lambda$:
+
+$$ 
+\lambda = \left( \frac{\sum w y^\kappa}{\sum w} \right)^{\frac{1}{\kappa}} 
+$$
+
+Substituting this result into the partial derivative with respect to $\kappa$:
+
+$$ 
+\frac{\partial\log\mathcal{L}}{\partial\kappa} = \sum w \left[
+    \frac{1}{\kappa} - 
+    \frac{\sum w x^\kappa \log x}{\sum w x^{\kappa}}
+    \right] + 
+    \sum \log w x = 0 
+$$
+
+This should be solved for the unknown $\kappa$, and the results can be substituted in the result for $\lambda$ in order to find the scale parameter.
+
+# Coefficients
+
+Using coefficients to make writing equations easier:
+
+$$ 
+c_1 = \sum w 
+$$
+
+$$ 
+c_2 = \sum w \log x 
+$$
+
+$$ 
+c_3 = \sum w x^\kappa 
+$$
+
+$$ 
+c_4 = \sum w x^\kappa \log x 
+$$
+
+$$ 
+c_5 = \sum w x^\kappa \log^2 x 
+$$
+
+$$ 
+c_6 = \sum w y^\kappa \log^3 d 
+$$
+
+We find:
+
+$$
+\lambda = \left(\frac{c_3}{c_1}\right)^{1/\kappa} 
+$$
+
+$$ 
+\frac{\partial\log\mathcal{L}}{\partial\kappa} = \frac{c_1}{\kappa} - \frac{c_1 c_4}{c_3} + c_2 = 0 
+$$
+
+Further partial derivatives of this equation, which can be used for gradient-descent type root solving methods (such as Newton's or Halley's methods) are:
+
+$$ 
+\frac{\partial^2\log\mathcal{L}}{\partial\kappa^2} = -\frac{c_1}{\kappa^2} - \frac{c_1 c_5}{c_3} + \frac{c_1 c_4^2}{c_3^2} 
+$$
+
+$$ 
+\frac{\partial^3\log\mathcal{L}}{\partial\kappa^3} = \frac{2 c_1}{\kappa^3} - \frac{c_1 c_6}{c_3} + \frac{3 c_1 c_4 c_5}{c_3^2} - \frac{2 c_1 c_4^3}{c_3^3} 
+$$
+
+# Intial guess
+
+An initial guess for $\kappa$ can be made by fitting a linearised form of the Weibull survival function. Sort all $x$-observations in order of magnitude. The survival function equals:
+
+$$ 
+y = \exp\left[-\left(\frac{x}{\lambda}\right)^\kappa\right] 
+$$
+
+and can be written in linear form as:
+
+$$
+\log(-\log(y)) = \kappa \log(x) - \kappa\log(\lambda) 
+$$
+
+Estimate the survival parameter $y$ as:
+
+$$ 
+y \approx \frac{2i - 1}{2n} 
+$$
+
+where $n$ is the number of observations, and $i = 1..n$ the index.
+
+The linearised survival function can now be fitted using standard linear regression techniques in order to obtain an initial guess for Weibull shape parameter $\kappa$.

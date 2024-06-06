@@ -1,0 +1,295 @@
+---
+title: "power_gumbel_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_gumbel_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
+
+$$
+\bar{y} = y_0 x^\beta
+$$
+
+Using the definition of the mean of the Gumbel distribution, at each value of $x$ the following must satisfied:
+
+$$
+\mu + \gamma \theta = y_0 x^\beta
+$$
+
+Where $\mu$ and $\theta$ are the location and scale parameter describing the Gumbell probability distribution, and $\gamma$ the Euler-Mascheroni constant:
+
+$$
+\gamma 
+= \lim_{n \rightarrow \infty} \left( -\log n + \sum\limits_{k=1}^{n} \frac{1}{k} \right)
+\approx 0.5772156649
+$$ 
+
+The scale parameter $\theta$ is assumed to scale with the mean:
+
+$$
+\theta = \theta_0 x^\beta 
+\propto
+\mu
+$$
+
+Therefore, the location and scale parameters can be written in terms of three unknowns: $y_0$, $\beta$ and $\theta_0$:
+
+$$ 
+\mu = \left( y_0 - \gamma \theta_0 \right) x^\beta
+$$
+
+
+$$ 
+\theta = \theta_0 x^\beta
+$$
+
+The probability $p$ following the Weibull distribution:
+
+$$ 
+p = \frac{1}{\theta}\exp\left[\frac{\mu - y}{\theta} -\exp\left( \frac{\mu - y}{\theta} \right) \right]
+$$
+
+which, with the above expressions, can be rewritten as:
+
+$$
+p = \frac{1}{\theta_0 x^\beta} \exp\left[
+\frac{y_0}{\theta_0} - \gamma - \frac{y}{\theta_0 x^\beta} 
+- \exp\left( \frac{y_0}{\theta_0} - \gamma - \frac{y}{\theta_0 x^\beta}  \right) \right]
+$$
+
+The log-transformed probability is equal to:
+
+$$
+\log p = 
+-\log \theta_0 - \beta \log x - \gamma + 
+\frac{1}{\theta_0} \left( y_0 - \frac{y}{x^\beta} \right) - 
+\frac{1}{\exp \gamma} \exp\left[ \frac{1}{\theta_0} \left(y_0 - \frac{y}{x^\beta} \right) \right]
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$ and $\kappa$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = 
+\sum w \left( \frac{y_0}{\theta_0} - \log \theta_0 - \gamma \right) 
+- \beta \sum w \log x 
+- \frac{1}{\theta_0} \sum \frac{w y}{x^\beta}
+- \exp \left(\frac{y_0}{\theta_0} - \gamma\right) \sum w \exp \left(- \frac{y}{\theta_0 x^\beta} \right)
+$$
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w \log x
+$$
+
+$$
+c_3 = \sum w x^{-\beta} y
+\qquad
+\frac{\partial c_3}{\partial \beta} = -c_4
+$$
+
+$$ 
+c_4 = \sum w x^{-\beta} y \log x
+\qquad
+\frac{\partial c_4}{\partial \beta} = -c_5
+$$
+
+$$ 
+c_5 = \sum w x^{-\beta} y \log^2 x
+$$
+
+$$ 
+c_6 = \sum w \exp \left( -\frac{y}{\theta_0 x^\beta} \right)
+\qquad
+\frac{\partial c_6}{\partial \beta} = \frac{c_8}{\theta_0}
+\qquad
+\frac{\partial c_6}{\partial \theta} = \frac{c_7}{\theta_0^2}
+$$
+
+$$ 
+c_7 = \sum \frac{w y}{x^\beta} \exp \left( -\frac{y}{\theta_0 x^\beta} \right)
+\qquad
+\frac{\partial c_7}{\partial \beta} = \frac{c_{11}}{\theta_0} - c_8
+\qquad
+\frac{\partial c_7}{\partial \theta} = \frac{c_{10}}{\theta_0^2}
+$$
+
+$$ 
+c_8 = \sum \frac{w y \log x}{x^\beta} \exp \left( -\frac{y}{\theta_0 x^\beta} \right)
+\qquad
+\frac{\partial c_8}{\partial \beta} = \frac{c_{12}}{\theta_0} - c_9
+\qquad
+\frac{\partial c_8}{\partial \theta} = \frac{c_{11}}{\theta_0^2}
+$$
+
+$$ 
+c_9 = \sum \frac{w y \log^2 x}{x^\beta} \exp \left( -\frac{y}{\theta_0 x^\beta} \right)
+$$
+
+$$ 
+c_{10} = \sum \frac{w y^2}{x^{2\beta}} \exp \left( -\frac{y}{\theta_0 x^\beta} \right)
+$$
+
+$$ 
+c_{11} = \sum \frac{w y^2 \log x}{x^{2\beta}} \exp \left( -\frac{y}{\theta_0 x^\beta} \right)
+$$
+
+$$ 
+c_{12} = \sum \frac{w y^2 \log^2 x}{x^{2\beta}} \exp \left( -\frac{y}{\theta_0 x^\beta} \right)
+$$
+
+There coefficients are functions of fitting parameter $\beta$ and observations $x$,$y$ only. With these definitions, the loglikelihood can be written as:
+
+$$
+\log\mathcal{L} = 
+c_1 \left( \frac{y_0}{\theta_0} - \log \theta_0 - \gamma \right) 
+- \beta c_2
+- \frac{c_3}{\theta_0} 
+- \exp \left(\frac{y_0}{\theta_0} - \gamma\right) c_6
+$$
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $y_0$, $\beta$ and $\theta_0$ are zero.
+
+The partial derivative with respect to $y_0$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{c_1}{\theta_0} - \frac{1}{\theta_0} \exp\left( \frac{y_0}{\theta_0} - \gamma \right) c_6 = 0
+$$
+
+Solving this for $y_0$ gives:
+
+$$
+y_0 = \theta_0 \left(\log c_1 - \log c_6 + \gamma \right)
+$$
+
+Substituting this result back into the loglikelihood expression:
+
+$$
+\log\mathcal{L} = 
+c_1 \left(\log c_1 - \log c_6 - \log\theta_0 - 1 \right) - 
+\beta c_2 - 
+\frac{c_3}{\theta_0} 
+$$
+
+The partial derivatives with respect to $\beta$ and $\theta_0$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{c_4}{\theta_0} - \frac{c_1 c_8}{\theta_0 c_6} - c_2
+= 0
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \theta_0} = 
+\frac{c_3}{\theta_0^2} - \frac{c_1 c_7}{\theta_0^2 c_6} - \frac{c_1}{\theta_0}
+= 0
+$$
+
+These two equations can be simultaneously solved to find unknowns $\beta$ and $\theta_0$.
+
+When gradient-descent methods are used, the required second-order partial derivatives are give by:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+\frac{c_1 c_9}{\theta_0 c_6} + 
+\frac{c_1 c_8^2}{\theta_0^2 c_6^2} - 
+\frac{c_5}{\theta_0} - 
+\frac{c_1 c_{12}}{\theta_0^2 c_6}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\beta \partial\theta_0} = 
+\frac{c_1 c_7 c_8}{\theta_0^3 c_6^2} - \frac{c_1 c_{11}}{\theta_0^3 c_6} + \frac{c_1 c_8}{\theta_0^2 c_6} - \frac{c_4}{\theta_0^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\theta_0^2} = 
+$$
+
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{c_1}{\theta_0} - \frac{c_6}{\theta_0} \exp\left( \frac{y_0}{\theta_0} - \gamma \right) 
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{c_4}{\theta_0} - c_2 - \frac{c_8}{\theta_0} \exp \left( \frac{y_0}{\theta_0} - \gamma \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \theta_0} = 
+-\frac{c_1}{\theta_0} \left( \frac{y_0}{\theta_0} + 1 \right) + 
+\frac{1}{\theta_0^2} \left[ c_3 + (c_6 y_0 - c_7) \exp\left( \frac{y_0}{\theta_0} - \gamma \right) \right]
+$$
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0^2} =
+-\frac{c_6}{\theta_0^2} \exp\left(\frac{y_0}{\theta_0}-\gamma\right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial\beta} =
+-\frac{c_8}{\theta_0^2}\exp\left(\frac{y_0}{\theta_0}-\gamma\right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial\theta_0} = 
+\frac{1}{\theta_0^2} \left[ c_6 \left(1 + \frac{y_0}{\theta_0}\right) - \frac{c_7}{\theta_0} \right] \exp\left(\frac{y_0}{\theta_0}-\gamma\right) - 
+\frac{c_1}{\theta_0^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+\frac{1}{\theta} \left( c_9 - \frac{c_{12}}{\theta_0} \right) \exp\left(\frac{y_0}{\theta_0}-\gamma\right) - 
+\frac{c_5}{\theta_0}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\beta \partial\theta_0} = 
+\frac{1}{\theta_0^2} \left[ c_8 \left(1 + \frac{y_0}{\theta_0}\right) - \frac{c_{11}}{\theta_0} \right] \exp\left(\frac{y_0}{\theta_0}-\gamma\right) - 
+\frac{c_4}{\theta_0^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\theta_0^2} = 
+\frac{c_1}{\theta_0^2} -
+\frac{2(c_3 - c_1 y_0)}{\theta_0^3} - 
+\frac{2(c_6 y_0 - c_7)}{\theta_0^3} \exp\left(\frac{y_0}{\theta_0}-\gamma\right) +
+\frac{(2 c_7 y_0 - c_{10} - c_6 y_0^2)}{\theta_0^4} \exp\left(\frac{y_0}{\theta_0}-\gamma\right)
+$$

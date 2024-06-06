@@ -1,0 +1,234 @@
+---
+title: "power_normal_unscaled_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_normal_unscaled_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
+
+$$
+\bar{y} = y_0 x^\beta
+$$
+
+Using the definition of the mean of the normal distribution, at each value of $x$ the following must satisfied:
+
+$$
+\mu = y_0 x^\beta
+$$
+
+The standard deviation is assumed to be constant over $x$ (homoscedastic), i.e:
+
+$$
+\sigma = \sigma
+$$
+
+The probability $p$ following the normal distribution:
+
+$$ 
+p = \frac{1}{\sigma \sqrt{2 \pi}} \exp \left[- \frac{1}{2} \left( \frac{y - \mu}{\sigma} \right)^2 \right]
+$$
+
+which, with the above expressions, can be rewritten as:
+
+$$
+p = \frac{1}{\sigma \sqrt{2 \pi}} \exp \left[ - \frac{1}{2\sigma^2} \left(y - y_0 x^\beta \right)^2 \right]
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$ and $\sigma$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = 
+-\sum w \left(\log\sigma + \frac{1}{2} \log(2\pi)\right) -
+\sum \frac{w}{2\sigma_0} \left( y - y_0 x^\beta \right)^2
+$$
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w x^{2\beta}
+\qquad
+\frac{\partial c_2}{\partial\beta} = 2 c_3
+$$
+
+$$ 
+c_3 = \sum w x^{2\beta} \log x
+\qquad
+\frac{\partial c_3}{\partial\beta} = 2 c_4
+$$
+
+$$ 
+c_4 = \sum w x^{2\beta} \log^2 x
+$$
+
+$$ 
+c_5 = \sum w x^\beta y
+\qquad
+\frac{\partial c_3}{\partial\beta} = c_6
+$$
+
+$$
+c_6 = \sum w x^\beta y \log x
+\qquad
+\frac{\partial c_3}{\partial\beta} = c_7
+$$
+
+$$
+c_7 = c_6 = \sum w x^\beta y \log^2 x
+$$
+
+$$
+c_8 = \sum w y^2
+$$
+
+With these parameters, the loglikelihood function can be rewritten as:
+
+$$
+\log\mathcal{L} = 
+-c_1 \left(\log\sigma + \frac{1}{2} \log(2\pi) \right) -
+\frac{ \left( c_8 - 2 y_0 c_5 + c_2 y_0^2 \right) }{2\sigma^2}
+$$
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $y_0$, $\beta$ and $\sigma$ are zero. The derivative with respect to $y_0$:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{c_5 - c_2 y_0}{\sigma_0^2}
+= 0
+$$
+
+Solving this for $y_0$ gives:
+
+$$
+y_0 = \frac{c_5}{c_2}
+$$
+
+Substituting this result back into the equation for $\log\mathcal{L}$
+
+$$
+\log\mathcal{L} = 
+-c_1 \left(\log\sigma + \frac{1}{2} \log(2\pi) \right) -
+\frac{1}{2\sigma^2} \left[c_8 - \frac{c_5^2}{c_2} \right]
+$$
+
+Now taking the derivative with respect to $\sigma$:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \sigma_0} = 
+\frac{1}{\sigma^3} \left[c_8 - \frac{c_5^2}{c_2} \right] - 
+\frac{c_1}{\sigma}
+= 0
+$$
+
+Solving this for $\sigma_0^2$ gives:
+
+$$
+\sigma_0^2 = \frac{c_8}{c_1} - \frac{c_5^2}{c_1 c_2}
+$$
+
+Substituting this back into the expression for the loglikelihood:
+
+$$
+\log\mathcal{L} = 
+\frac{-c_1}{2} \left[ \log\left(\frac{c_8}{c_1} - \frac{c_5^2}{c_1 c_2}\right) + \log(2\pi) + 1 \right] 
+$$
+
+The derivative with respect to $\beta$ is now:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{c_1 c_5 (c_2 c_6 - c_3 c_5)}{c_2 (c_2 c_8 - c_5^2)}
+= 0
+$$
+
+Which can be solved for the final unknown $\beta$. When using gradient descent methods, the second-order derivative equals:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta^2} = 
+\frac{c_1 \left( c_2 c_5 c_7 - 2 c_4 c_5^2 + c_2 c_6^2 \right)}{c_2 \left( c_2 c_8 - c_5^2 \right)} + 
+\frac{2 c_1 c_5 \left( c_2 c_6 - c_3 c_5 \right) \left(c_3 c_5^2 + c_2 c_5 c_6 - 2 c_2 c_3 c_8 \right)}{c_2^2 \left( c_2 c_8 - c_5^2 \right)^2}
+$$
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{1}{\sigma^2} \left( c_5 - c_2 y_0 \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{y_0}{\sigma^2} \left( c_6 - c_3 y_0 \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \sigma} = 
+\frac{-c_1}{\sigma} + \frac{1}{\sigma^3} \left(c_8 - 2 c_5 y_0 + c_2 y_0^2 \right)
+$$
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0^2} = 
+\frac{-c_2}{y_0}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \beta} = 
+\frac{1}{\sigma^2} \left( c_6 - 2 c_3 y_0 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \sigma} = 
+\frac{2}{\sigma^3} \left( c_2 y_0 - c_5 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+\frac{y_0}{\sigma^2} \left( c_7 - 2 c_4 y_0 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta \partial \sigma} = 
+\frac{2 y_0}{\sigma^3} \left( c_3 y_0 - c_6 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \sigma^2} = 
+\frac{c_1}{\sigma^2} - \frac{3}{\sigma^4} \left(c_8 - 2 c_5 y_0 + c_2 y_0^2 \right)
+$$

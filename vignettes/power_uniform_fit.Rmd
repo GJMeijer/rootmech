@@ -1,0 +1,18 @@
+---
+title: "power_uniform_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_uniform_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+Uniform

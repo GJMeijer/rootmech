@@ -1,4 +1,8 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 R/power_weibull_OLD.r
+R/power_weibull_OLD2.r
 R/power_nls_OLD.r
+R/power_normal_OLD_20231012.r
+^doc$
+^Meta$

@@ -1,0 +1,258 @@
+---
+title: "power_gamma_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_gamma_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
+
+$$
+\bar{y} = y_0 x^\beta
+$$
+
+Using the definition of the mean of the Gamma distribution, at each value of $x$ the following must satisfied:
+
+$$
+k \theta = y_0 x^\beta
+$$
+
+Where $k$ and $\theta$ are the shape and scale parameter describing the Gamma probability distribution. Therefore, scale parameter $\theta$ can be written as:
+
+$$ 
+\theta = \frac{y_0 x^\beta}{k}
+$$
+
+The probability $p$ following the Weibull distribution:
+
+$$ 
+p = \frac{y^{k-1}}{\Gamma(k) \theta^k}\exp\left(-\frac{y}{\theta}\right)
+$$
+
+which, with the above expressions, can be rewritten as:
+
+$$
+p = \frac{y^{k-1} k^k}{\Gamma(k) y_0^k x^{\beta k}}\exp\left(-\frac{k y}{y_0 x^\beta}\right)
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$ and $\kappa$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = 
+\left(k \log k - \log \Gamma(k) - k \log y_0 \right) \sum w - 
+\beta k \sum w \log x + 
+(k - 1) \sum w \log y - 
+\frac{k}{y_0} \sum \frac{w y}{x^\beta}
+$$
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w \log x
+$$
+
+$$
+c_3 = \sum w \log x
+$$
+
+$$ 
+c_4 = \sum w x^{-\beta} y
+\qquad
+\frac{\partial c_4}{\partial \beta} = -c_5
+$$
+
+$$ 
+c_5 = \sum w x^{-\beta} y \log x
+\qquad
+\frac{\partial c_5}{\partial \beta} = -c_6
+$$
+
+$$ 
+c_6 = \sum w x^{-\beta} y \log^2 x
+$$
+
+There coefficients are functions of fitting parameter $\beta$ and observations $x$,$y$ only. With these definitions, the loglikelihood can be written as:
+
+$$
+\log\mathcal{L} = 
+c_1 \left( k \log k - \log \Gamma(k) - k \log y_0 \right) 
+- \beta \kappa c_2
++ (k - 1) c_3
+- \frac{k c_4}{y_0}
+$$
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $y_0$, $\beta$ and $k$ are zero.
+
+The partial derivative with respect to $y_0$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{k}{y_0} \left(\frac{c_4}{y_0} - c_1 \right)
+$$
+
+Solving this for $y_0$ gives:
+
+$$
+y_0 = \frac{c_4}{c_1}
+$$
+
+Substituting this result back into the loglikelihood expression:
+
+$$
+\log\mathcal{L} = 
+c_1 \left( k \log k - \log \Gamma(k) - k \log c_4 + k \log c_1 - k \right) 
+- \beta \kappa c_2
++ (k - 1) c_3
+$$
+
+The partial derivative with respect to $\beta$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\beta} =
+\frac{k c_1 c_5}{c_4} - k c_2 =
+0
+$$
+
+Alternatively written:
+
+$$
+\frac{1}{k} \frac{\partial\log\mathcal{L}}{\partial\beta} =
+\frac{c_1 c_5}{c_4} - c_2 =
+0
+$$
+
+We can solve this for the unknown value for $\beta$. The further partial derivative, required when using gradient-descent methods, is given by:
+
+$$
+\frac{1}{k} \frac{\partial^2\log\mathcal{L}}{\partial\beta^2} =
+\frac{c_1}{c_4} \left( \frac{c_5^2}{c_4} - c_6 \right)
+$$
+
+With the known results for $\beta$, all coefficients $c_1$ to $c_6$ are fully known.
+
+Finally the root of the partial derivative of the loglikelihood with respect to $k$ can be solved in order to find the final unknown $k$:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial k} =
+c_1 \left( \log k - \psi(k) - \log c_4 + \log c_1 \right) - \beta c_2 + c_3
+= 0
+$$
+
+Where $\psi()$ is the digamma function. When using a gradient-descent root solving technique, the further partial derivative equals:
+
+$$ 
+\frac{\partial^2\log\mathcal{L}}{\partial k^2} =
+c_1 \left( \frac{1}{\kappa} - \psi^{(1)} (k) \right)
+$$
+
+where $\psi^{(1)}$ is the first derivative of the digamma function.
+
+# Initial guess
+
+The above root solving method requires intial guesses for $\beta$ and $k$.
+
+An initial guess for $\beta$ can be made using linear regression on log-transformed $x$ and $y$ values.
+
+An estimate for $k$ can be make by approximating the digamma function as:
+
+$$
+\psi(k) \approx \log k - \frac{1}{2 k}
+$$
+
+Substituting this into the equation for the root gives:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial k} \approx
+c_1 \left( \frac{1}{2 k} - \log c_4 + \log c_1 \right) - \beta c_2 + c_3 
+= 0
+$$
+
+Solving this for $k$ gives the initial guess:
+
+$$ 
+k \approx \frac{c_1}{2 \left(\beta c_2 - c_3 \right) + 2 c_1\log \left(\frac{c_4}{c_1} \right)}
+$$
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{k}{y_0} \left(\frac{c_4}{y_0} - c_1 \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+k \left(\frac{c_5}{y_0} - c_2 \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial k} = 
+c_1 \left(1 + \log k - \psi(k) - \log y_0 \right) - \beta c_2 + c_3 - \frac{c_4}{y_0}
+$$
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0^2} =
+\frac{k}{y_0^2} \left(c_1 - \frac{2 c_4}{y_0} \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \beta} = 
+\frac{-k c_5}{y_0^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial k} = 
+\frac{1}{y_0} \left(\frac{c_4}{y_0} - c_1 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+\frac{-k c_6}{y_0}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta \partial k} = 
+\frac{c_5}{y_0} - c_2
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial k} = 
+c_1 \left( \frac{1}{k} - \psi^{(1)}(k) \right)
+$$

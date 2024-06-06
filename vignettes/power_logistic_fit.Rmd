@@ -1,0 +1,180 @@
+---
+title: "power_logistic_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_logistic_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$: $$ \bar{y} = y_0 x^\beta $$
+
+The ratio $y/\bar{y}$ is assumed to be logistically distributed (mean $mu$, shape parameter $s$) with a mean:
+
+$$
+\mu = y_0 x^\beta
+$$
+
+The shape parameter $s$ is assumed the scale with the mean, so
+
+$$
+s = s_0 x^\beta
+$$
+
+where $s_0$ is a fitting coefficient.
+
+The probability $p$ following the Logistic distribution:
+
+$$ 
+p = \frac{1}{4s} \cosh^{-2}\left(\frac{y - \mu}{2s} \right)
+$$
+
+which, with the above expressions, can be rewritten as:
+
+$$
+p = \frac{1}{4 s_0 x^\beta} \cosh^{-2}\left( \frac{1}{2 s_0} \left[ \frac{y}{x^\beta} - y_0 \right] \right)
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$ and $s_0$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = 
+-\log(4 s_0) \sum w - \beta \sum w \log x - 
+2 \sum w \log \cosh \left( \frac{1}{2 s_0} \left[ \frac{y}{x^\beta} - y_0 \right] \right)
+$$
+
+# Coefficients
+
+Let's define some coefficients to make writing equations easier
+
+$$
+\zeta = \tanh\left[ \frac{1}{2 s_0} \left (\frac{y}{x_\beta} - y_0 \right) \right]
+$$
+
+$$
+\eta = \cosh^{-1}\left[ \frac{1}{2 s_0} \left (\frac{y}{x_\beta} - y_0 \right) \right]
+$$
+
+The loglikelihood function can be written as:
+
+$$
+\log\mathcal{L} = 
+-\log(4 s_0) \sum w - \beta \sum w \log x + 
+2 \sum w \log \eta
+$$
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $y_0$, $\beta$ and $s_0$ are zero. These derivatives are given by:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{1}{s_0} \sum w \zeta
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} =
+\frac{1}{s_0} \sum \frac{w \zeta y \log x}{x^\beta} - \sum w \log x
+$$
+
+$$ 
+\frac{\partial\log\mathcal{L}}{\partial s_0} =
+\frac{1}{s_0^2} \sum w \zeta \left(\frac{y}{x^\beta} - y_0 \right) - 
+\frac{1}{s_0} \sum w
+$$
+
+These equations cannot be further simplified and must be solved as a set for the unknown $y_0$, $\beta$ and $s_0$.
+
+When solving these equations with gradient-descent methods, the second-order partial derivatives are given by:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0^2} = 
+\frac{1}{s_0} \sum w \frac{\partial\zeta}{\partial y_0}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial\beta} = 
+\frac{1}{s_0} \sum w \frac{\partial\zeta}{\partial \beta}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial s_0} = 
+\frac{1}{s_0} \sum w
+\left( \frac{\partial\zeta}{\partial s_0} - \frac{\zeta}{s_0} \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+\frac{1}{s_0} \sum \frac{w y \log x}{x^\beta} 
+\left( \frac{\partial\zeta}{\partial \beta} - \zeta \log x \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta \partial s_0} = 
+\frac{1}{s_0} \sum \frac{w y \log x}{x^\beta} 
+\left( \frac{\partial\zeta}{\partial \beta} - \frac{\zeta}{s_0} \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial s_0^2} = 
+\frac{1}{s_0^2} \sum w \left(\frac{y}{x^\beta} - y_0 \right) 
+\left( \frac{\partial\zeta}{\partial s_0} - \frac{2 \zeta}{s_0} \right)
++ \frac{1}{s_0^2} \sum w
+$$
+
+where:
+
+$$
+\frac{\partial\zeta}{\partial y_0} = 
+\frac{-\eta^2}{2 s_0}
+$$
+
+$$
+\frac{\partial\zeta}{\partial \beta} = 
+\frac{-\eta^2 y \log x}{2 s_0 x^\beta}
+$$
+
+$$
+\frac{\partial\zeta}{\partial s_0} = 
+\frac{-\eta^2 \left(\frac{y}{x^\beta} - y_0 \right)}{2 s_0^2}
+$$
+
+# Initial guess
+
+We should make an informed initial guess for fitting parameters $y_0$, $\beta$ and $s_0$ in order to speed up solving the problem.
+
+We can estimate $\beta$ based on linear regression on log-transformed $x$ and $y$ values.
+
+The other two parameters can be estimated using the moments of the scaled parameter $y/x^\beta$
+
+$$
+y_0 = \mu \left(\frac{y_0}{x^\beta} \right)
+$$
+
+$$
+s_0 = \frac{\sqrt{3}}{\pi} \sigma \left(\frac{y_0}{x^\beta}\right)
+$$
+
+where $\mu$ and $\sigma$ indicate the functions to calculate the mean and standard deviation.

@@ -1,0 +1,376 @@
+---
+title: "power_normal_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_normal_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
+
+$$
+\bar{y} = y_0 x^\beta
+$$
+
+Using the definition of the mean of the normal distribution, at each value of $x$ the following must satisfied:
+
+$$
+\mu = y_0 x^\beta
+$$
+
+The standard deviation is assumed to follow a separate power-law, i.e:
+
+$$
+\sigma = \sigma_0 x^\delta
+$$
+
+The probability $p$ following the normal distribution:
+
+$$ 
+p = \frac{1}{\sigma \sqrt{2 \pi}} \exp \left[- \frac{1}{2} \left( \frac{y - \mu}{\sigma} \right)^2 \right]
+$$
+
+which, with the above expressions, can be rewritten as:
+
+$$
+p = \frac{1}{\sigma_0 x^\delta \sqrt{2 \pi}} \exp \left[ - \frac{1}{2} \left(\frac{y - y_0 x^\beta}{\sigma_0 x^\delta} \right)^2 \right]
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$, $\sigma_0$ and $\delta$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = 
+-\sum w \left(\log\sigma_0 + \delta \log x + \frac{1}{2} \log(2\pi)\right) -
+\sum \frac{w}{2} \left( \frac{y - y_0 x^\beta}{\sigma_0 x^\delta} \right)^2
+$$
+
+We will first consider the case where $y_0$, $\beta$, $\sigma_0$ and $\delta$ are all unknown. Cases where $\beta$ or $\delta$ are known, or $\beta = \delta$ are simplifications of the general case and will be discussed in a later section.
+
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w \log x
+$$
+
+$$ 
+c_3 = \sum w x^{2\beta - 2\delta}
+\qquad
+\frac{\partial c_3}{\partial\beta} = 2 c_4
+\qquad
+\frac{\partial c_3}{\partial\delta} = -2 c_4
+$$
+
+$$ 
+c_4 = \sum w x^{2\beta - 2\delta} \log x
+\qquad
+\frac{\partial c_4}{\partial\beta} = 2 c_5
+\qquad
+\frac{\partial c_4}{\partial\delta} = -2 c_5
+$$
+
+$$ 
+c_5 = \sum w x^{2\beta - 2\delta} \log^2 x
+$$
+
+$$ 
+c_6 = \sum w x^{\beta - 2\delta} y
+\qquad
+\frac{\partial c_6}{\partial\beta} = c_7
+\qquad
+\frac{\partial c_6}{\partial\delta} = -2 c_7
+$$
+
+$$ 
+c_7 = \sum w x^{\beta - 2\delta} y \log x
+\qquad
+\frac{\partial c_7}{\partial\beta} = c_8
+\qquad
+\frac{\partial c_7}{\partial\delta} = -2 c_8
+$$
+
+$$ 
+c_8 = \sum w x^{\beta - 2\delta} y \log^2 x
+$$
+
+$$ 
+c_9 = \sum w x^{-2\delta} y^2
+\qquad
+\frac{\partial c_9}{\partial\beta} = 0
+\qquad
+\frac{\partial c_9}{\partial\delta} = -2 c_{10}
+$$
+
+$$ 
+c_{10} = \sum w x^{-2\delta} y^2 \log x
+\qquad
+\frac{\partial c_{10}}{\partial\beta} = 0
+\qquad
+\frac{\partial c_{10}}{\partial\delta} = -2 c_{11}
+$$
+
+$$ 
+c_{11} = \sum w x^{-2\delta} y^2 \log^2 x
+$$
+
+With these parameters, the loglikelihood function can be rewritten as:
+
+$$
+\log\mathcal{L} = 
+-c_1 \left(\log\sigma_0 + \frac{1}{2} \log(2\pi) \right) -
+c_2 \delta - 
+\frac{ \left( c_9 - 2 c_6 y_0 + c_3 y_0^2 \right) }{2\sigma_0^2}
+$$
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $y_0$, $\beta$, $\sigma_0$ and $\delta$ are zero. The partial derivative with respect to $y_0$:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{-1}{\sigma_0^2} \left( -2 c_6 + 2 c_3 y_0 \right)
+= 0
+$$
+
+Solving this for $y_0$ gives:
+
+$$
+y_0 = \frac{c_6}{c_3}
+$$
+
+Substituting this result back into the equation for $\log\mathcal{L}$
+
+$$
+\log\mathcal{L} = 
+-c_1 \left(\log\sigma_0 + \frac{1}{2} \log(2\pi) \right) -
+c_2 \delta - 
+\frac{1}{2\sigma_0^2} \left( c_9 - \frac{c_6^2}{c_3} \right) 
+$$
+
+Now taking the derivative with respect to $\sigma_0$:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \sigma_0} = 
+\frac{-c_1}{\sigma_0} + 
+\frac{1}{\sigma_0^3} \left(c_9 - \frac{c_6^2}{c_3}\right)
+= 0
+$$
+
+Solving this for $\sigma_0^2$ gives:
+
+$$
+\sigma_0^2 = \frac{c_9}{c_1} - \frac{c_6^2}{c_1 c_3}
+$$
+
+Substituting this back into the expression for the loglikelihood:
+
+$$
+\log\mathcal{L} = 
+-\frac{c_1}{2} \left[1 + \log\left(\frac{c_9}{c_1} - \frac{c_6^2}{c_1 c_3}\right) + \log(2\pi) \right] - c_2 \delta 
+$$
+
+The partial derivatives with respect to $\beta$ and $\delta$ - which must be equal to zero - are now:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{c_1 c_6 (c_3 c_7 - c_4 c_6)}{c_3 (c_3 c_9 - c_6^2)}
+= 0
+$$
+
+$$ 
+\frac{\partial\log\mathcal{L}}{\partial \delta} =
+\frac{c_1 (c_3^2 c_{10} - 2 c_3 c_6 c_7 + c_4 c_6^2)}{c_3 (c_3 c_9 - c_6^2)} - c_2 =
+0
+$$
+
+These two partial derivatives can be solved for the final unknowns $\beta$ and $\delta$. When using gradient descent methods, the required second-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta^2} = 
+c_1 (c_3 c_7 - c_4 c_6) \left(c_6 \frac{\partial\zeta}{\partial\beta} + c_7 \zeta \right) +
+c_1 c_6 \left(c_4 c_7 + c_3 c_8 - 2 c_5 c_6 \right) \zeta
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta \partial \delta} = 
+c_1 (c_3 c_7 - c_4 c_6) \left(c_6 \frac{\partial\zeta}{\partial\delta} - 2 c_7 \zeta \right) + 
+2 c_1 c_6 \left( c_5 c_6 - c_3 c_8 \right) \zeta
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \delta^2} = 
+c_1 \left( c_3^2 c_{10} - 2 c_3 c_6 c_7 + c_4 c_6^2 \right) \frac{\partial\zeta}{\partial\delta} +
+c_1 \left(-4 c_3 c_4 c_{10} - 2 c_3^2 c_{11} + 4 c_3 c_7^2 + 4 c_3 c_6 c_8 - 2 c_5 c_6^2 \right) \zeta
+$$
+
+where:
+
+$$
+\zeta = \frac{1}{c_3 (c_3 c_9 - c_6^2)}
+$$
+
+$$
+\frac{\partial\zeta}{\partial \beta} = -\left(4 c_3 c_4 c_9 - 2 c_4 c_6^2 - 2 c_3 c_6 c_7 \right) \zeta^2
+$$
+
+$$
+\frac{\partial\zeta}{\partial \delta} = -\left(-4 c_3 c_4 c_9 - 2 c_3^2 c_{10} + 2 c_4 c_6^2 + 4 c_3 c_6 c_7 \right) \zeta^2
+$$
+
+# Simplified cases
+
+For some fitting cases, we have additional information about the values of $\beta$ and/or $\delta$. 
+
+## Fixed value of $\delta$
+
+In the case where $\delta$ is known and fixed, e.g. for non-linear least-squares regression of the power-law function ($\delta = 0$), we can find the only unknown $\beta$ by solving:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\beta} = 0
+$$. 
+
+The gradient of this function, that can be used for gradient-descent root solving method, is given by:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\beta^2}
+$$. 
+
+## Fixed value of $\beta$
+
+When $\beta$ is known and fixed, we can find the only unknown $\beta$ by solving:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\delta} = 0
+$$
+
+The gradient of this function, that can be used for gradient-descent root solving method, is given by:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\delta^2}
+$$. 
+
+
+## Scaling standard deviations: $\beta = \delta$
+
+When the magnitude of the standard deviation scales with the mean, i.e. $\beta = \delta$, we can solve:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\beta} +
+\frac{\partial\log\mathcal{L}}{\partial\delta} = 0 
+$$
+
+The gradient of this function, that can be used for gradient-descent root solving method, is given by:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\beta^2} + 
+2 \frac{\partial^2\log\mathcal{L}}{\partial\beta \partial\delta} + 
+\frac{\partial^2\log\mathcal{L}}{\partial\delta^2}
+$$. 
+
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{1}{\sigma_0^2} \left( c_6 - c_3 y_0 \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{y_0}{\sigma_0^2} \left( c_7 - c_4 y_0\right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \sigma_0} = 
+\frac{-c_1}{\sigma_0} + \frac{1}{\sigma_0^3} \left(c_9 - 2 c_6 y_0 + c_3 y_0^2 \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \delta} = 
+\frac{1}{\sigma_0^2} \left(c_{10} - 2 c_7 y_0 + c_4 y_0^2 \right) - c_2
+$$
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0^2} = 
+\frac{-c_3}{\sigma_0^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \beta} = 
+\frac{1}{\sigma_0^2} \left(c_7 - 2 c_4 y_0 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \sigma_0} = 
+\frac{2}{\sigma_0^3} \left( c_3 y_0 - c_6 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial \delta} = 
+\frac{2}{\sigma_0^2} \left( c_4 y_0 - c_7 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+\frac{y_0}{\sigma_0^2} \left( c_8 - 2 c_5 y_0 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta \partial \sigma_0} = 
+\frac{2 y_0}{\sigma_0^3} \left( c_4 y_0 - c_7 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta \partial \delta} = 
+\frac{2 y_0}{\sigma_0^2} \left( c_5 y_0 - c_8 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \sigma_0^2} = 
+\frac{c_1}{\sigma_0^2} - \frac{3}{\sigma_0^4} \left(c_9 - 2 c_6 y_0 + c_3 y_0^2 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \sigma_0 \partial \delta} = 
+\frac{2}{\sigma_0^3} \left(-c_{10} + 2 c_7 y_0 - c_4 y_0^2 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \delta^2} = 
+\frac{2}{\sigma_0^2} \left(-c_{11} + 2 c_8 y_0 - c_5 y_0^2 \right)
+$$

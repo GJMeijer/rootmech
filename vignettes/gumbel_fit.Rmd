@@ -1,0 +1,190 @@
+---
+title: "gumbel_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{gumbel_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Problem definitions
+
+We want to fit a series of $x$ data using a Gumbel distribution, characterised by a location parameter $\mu$ and a scale parameter $\theta$.
+
+The probability $p$ following the Gumbel distribution:
+
+$$ 
+p = \frac{1}{\theta}\exp\left[\frac{\mu - x}{\theta} -\exp\left( \frac{\mu - x}{\theta} \right) \right]
+$$
+
+The log-transformed probability is equal to:
+
+$$
+\log p = 
+-\log \theta +
+\frac{\mu - x}{\theta} - \exp\left(\frac{\mu - x}{\theta} \right)
+$$
+
+Solve for the best fitting parameters $\mu$ and $\theta$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = 
+\sum w \left( \frac{\mu}{\theta} - \log \theta \right) -
+\frac{1}{\theta} \sum w x -
+\exp \left(\frac{\mu}{\theta}\right) \sum w \exp \left(- \frac{x}{\theta} \right)
+$$
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w x
+$$
+
+$$
+c_3 = \sum w \exp\left(-\frac{x}{\theta}\right)
+\qquad
+\frac{\partial c_3}{\partial \theta} = \frac{c_4}{\theta^2}
+$$
+$$
+c_4 = \sum w x \exp\left(-\frac{x}{\theta}\right)
+\qquad
+\frac{\partial c_4}{\partial \theta} = \frac{c_5}{\theta^2}
+$$
+
+$$
+c_5 = \sum w x^2 \exp\left(-\frac{x}{\theta}\right)
+$$
+
+There coefficients are functions of fitting parameter $\theta$ and observations $x$ only. With these definitions, the loglikelihood can be written as:
+
+$$
+\log\mathcal{L} = 
+c_1 \left( \frac{\mu}{\theta} - \log\theta \right) 
+- \frac{c_2}{\theta_0} 
+- c_3 \exp \left(\frac{\mu}{\theta} \right)
+$$
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $\mu$, and $\theta$ are zero.
+
+The partial derivative with respect to $\mu$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \mu} = 
+\frac{c_1}{\theta} - \frac{c_3}{\theta} \exp \left(\frac{\mu}{\theta}\right)
+= 0
+$$
+
+Solving this for $\mu$ gives:
+
+$$
+\mu = \theta \log\left(\frac{c_1}{c_3}\right)
+$$
+
+Substituting this result back into the loglikelihood expression:
+
+$$
+\log\mathcal{L} = 
+c_1 \left(\log c_1 - \log c_3 - \log\theta - 1 \right) - \frac{c_2}{\theta}
+$$
+
+The partial derivative with respect to $\theta$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \theta} = 
+\frac{1}{\theta^2} \left( c_2 - \frac{c_1 c_4}{c_3} \right) - 
+\frac{c_1}{\theta}
+= 0
+$$
+
+This can be solved to find the final unknown, $\theta$. When using gradient-descent techniques, the second-order partial derivative equals:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \theta^2} = 
+\frac{c_1}{c_3 \theta^4} \left( \frac{c_4}{c_3} - c_5 \right) -
+\frac{2}{\theta^3} \left(c_2 - \frac{c_1 c_4}{c_3} \right) + 
+\frac{c_1}{\theta^2}
+$$
+
+# Initial guess
+
+The above root solving method requires an initial guesses for $\theta$
+
+An initial guess can be made by linear fitting on the transformed cumulative trace. The cumulative density $P$
+is given by:
+
+$$
+P = \exp\left[ -\exp\left( \frac{\mu - x}{\theta} \right) \right]
+$$
+
+so:
+
+$$
+\log\left( -\log P \right) = \frac{\mu}{\theta} - \frac{x}{\theta}
+$$
+
+So an initial guess for $\theta$ can be made as the negative inverse of the gradient of the linear fit.
+
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \mu} = 
+\frac{c_1}{\theta} - \frac{c_3}{\theta} \exp\left( \frac{\mu}{\theta} \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \theta} = 
+-\frac{c_1}{\theta} \left( \frac{\mu}{\theta} + 1 \right) + 
+\frac{c_2}{\theta^2} + 
+\frac{1}{\theta} \left( c_3 \mu - c_4 \right) \exp\left( \frac{\mu}{\theta} \right)
+$$
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \mu^2} =
+-\frac{c_3}{\theta^2} \exp\left( \frac{\mu}{\theta} \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\mu \partial\theta} =
+\frac{1}{\theta^2} \left[ c_3 \left( 1 + \frac{\mu}{\theta} \right) - \frac{c_4}{\theta} \right] \exp \left(\frac{\mu}{\theta}\right) - \frac{c_1}{\theta^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \theta^2} = 
+\frac{c_1}{\theta^2} + \frac{2}{\theta^3} \left( c_1 \mu - c_2 \right) - \frac{1}{\theta^3} \left( c_3 \mu - c_4 \right) \left( 2 + \frac{\mu}{\theta} \right) \exp \left( \frac{\mu}{\theta} \right) + 
+\frac{1}{\theta^4} \left( c_4 \mu - c_5 \right) \exp \left(\frac{\mu}{\theta} \right)
+$$

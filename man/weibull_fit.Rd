@@ -2,48 +2,46 @@
 % Please edit documentation in R/weibull.R
 \name{weibull_fit}
 \alias{weibull_fit}
-\title{Fit weibull distribution to a series of observations}
+\title{Weibull likelihood fitting}
 \usage{
 weibull_fit(
   x,
-  shape = NULL,
-  scale = NULL,
-  mu = NULL,
   weights = rep(1, length(x)),
-  shape_range = c(1, 100)
+  method = "bisection",
+  range = c(-1, 1),
+  start = NULL
 )
 }
 \arguments{
-\item{x}{vector with observations}
+\item{x}{array with observations}
 
-\item{shape}{if not `NULL`, a fixed value for the shape parameter}
+\item{weights}{weighting factor for each observation in \code{x}}
 
-\item{scale}{if not `NULL`, a fixed value for the scale parameter}
+\item{method}{choose \code{newton} for gradient descent solving, using the
+\code{rootSolve::multiroot()} function, or \code{bisection} for bisection root
+solving algorithm using the \code{stats::uniroot()} function.}
 
-\item{weights}{a vector with weights for each observation}
+\item{range}{two-value array to add to best guess, to define initial
+interval for bisection algorithm}
 
-\item{shape_range}{default `uniroot` interval. It is assumed that the actual
-shape parameter is somewhere in this range, otherwise the function will
-not work}
+\item{start}{initial guess for weibull shape parameter. If not defined, an
+estimate is made based on fitting of the linearised cumulative density
+distribution}
 }
 \value{
-dataframe with fields for `loglikelihood`, `shape` and `scale`
+a list containing the fields
+\itemize{
+\item \code{loglikelihood}: the log-likelihood score of the fit
+\item \code{shape}: fitted weibull shape parameter
+\item \code{scale}: fitted weibull scale parameter
+}
 }
 \description{
-Fit a Weibull probability distribution to a series of observations. The
-best fit is determined by using a root solve on the  derivative of the
-loglikelihood function, using the default R function `uniroot()`
+Determine best fitting Weibull distribution using weighted loglikelihood
+fitting.
 }
 \examples{
-shape <- 4
-scale <- 8
-x <- rweibull(1000, shape, scale)
-
-ft <- weibull_fit(x, shape = 3, mu = mean(x))
-
-hist(x, breaks = 25, freq = FALSE)
-xp <- seq(0, max(x), l = 101)
-yp <- dweibull(xp, ft$shape, ft$scale)
-lines(xp, yp)
+x <- stats::rweibull(1000, 4, 2)
+weibull_fit(x)
 
 }
