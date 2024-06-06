@@ -26,3 +26,4 @@ derivative of `powerlaw_gamma_root_beta()` with respect to `k`
 Returns the derivative of the function `powerlaw_gamma_root_k()`
 with respect to input argument `k`
 }
+\keyword{internal}

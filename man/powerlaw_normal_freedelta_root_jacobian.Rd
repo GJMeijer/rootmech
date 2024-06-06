@@ -33,3 +33,4 @@ derivative of `powerlaw_normal_freedelta_root()` with respect to
 Returns the derivative of the function `powerlaw_normal_freedelta_root()`
 with respect to input argument `delta`
 }
+\keyword{internal}

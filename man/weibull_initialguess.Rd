@@ -25,3 +25,4 @@ density function, i.e by fitting
 
 where P is the cumulative density for each value x
 }
+\keyword{internal}

@@ -31,14 +31,4 @@ loglikelihood score
 Returns the loglikelihood score for a power law probability density
 function, given the power coefficient `b`.
 }
-\examples{
-b <- 2
-x <- seq(1, 7, l = 101)^(1/b)
-
-eps <- 1e-6
-f0 <- power_loglikelihood(b, x)
-f1 <- power_loglikelihood(b + eps, x)
-(f1 - f0)/eps
-power_root(b, x)
-
-}
+\keyword{internal}

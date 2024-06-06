@@ -24,9 +24,10 @@ parameter.}
 }
 \value{
 derivative of `powerlaw_normal_linkedbetadelta_root()` with respect to
-  `beta`#'
+  `beta`
 }
 \description{
 Returns the derivative of the function `powerlaw_normal_linkedbetadelta_root()`
 with respect to input argument `beta`
 }
+\keyword{internal}

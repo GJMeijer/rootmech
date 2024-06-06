@@ -25,7 +25,7 @@
 #'   * `scale`: fitted weibull scale parameter
 #' @export
 #' @examples
-#' x <- stats::rweibull(1000, 4, 2)
+#' x <- stats::rweibull(50, 4, 2)
 #' weibull_fit(x)
 #'
 weibull_fit <- function(
@@ -89,6 +89,7 @@ weibull_fit <- function(
 #'
 #' @inheritParams weibull_fit
 #' @return initial guess for weibull shape parameter
+#' @keywords internal
 #'
 weibull_initialguess <- function(x, weights = rep(1, length(x))) {
   x <- sort(x)
@@ -108,6 +109,7 @@ weibull_initialguess <- function(x, weights = rep(1, length(x))) {
 #' @inheritParams weibull_fit
 #' @param shape shape parameter
 #' @return root
+#' @keywords internal
 #'
 weibull_root <- function(shape, x, weights = rep(1, length(x))) {
   # coefficients
@@ -128,20 +130,7 @@ weibull_root <- function(shape, x, weights = rep(1, length(x))) {
 #' @inheritParams weibull_root
 #' @return derivative of function `weibull_root()` with respect to input
 #'   argument `shape`
-#' @examples
-#' # parameters
-#' shape <- 4
-#'
-#' # create some data
-#' x <- stats::rweibull(50, shape, 2)
-#' w <- stats::runif(length(x))
-#'
-#' # check derivative - compare analytical and numerical solutions
-#' eps <- 1e-6
-#' v0 <- weibull_root(shape, x, weights = w)
-#' v1 <- weibull_root(shape + eps, x, weights = w)
-#' (v1 - v0)/eps
-#' weibull_root_jacobian(shape, x, weights = w)
+#' @keywords internal
 #'
 weibull_root_jacobian <- function(shape, x, weights = rep(1, length(x))) {
   # coefficients

@@ -27,6 +27,7 @@
 #'   * `loglikelihood`: the log-likelihood score of the fit
 #'   * `multiplier`: fitted power-law multiplier
 #'   * `sdlog`: log-standard deviation
+#' @export
 #' @examples
 #' # generate data
 #' y0 <- 20
@@ -46,14 +47,6 @@
 #' plot(x, y)
 #' lines(xp, yp, col = "red")
 #'
-#' # compare fit to linear regression (including means correction)
-#' ftl <- stats::lm(log(y) ~ log(x))
-#' betaL <- ftl$coef[2]
-#' alphaL <- ftl$coef[1]
-#' sdL <- sqrt(1/length(x)*sum((log(y) - alphaL - betaL*log(x))^2))
-#' c(exp(alphaL + sdL^2/2), betaL)
-#' c(ft$multiplier, ft$exponent)
-#'
 powerlaw_lognormal_fit <- function(
     x,
     y,
@@ -72,8 +65,6 @@ powerlaw_lognormal_fit <- function(
   y0 <- exp((c3 - beta*c2)/c1 + sdlog^2/2)
   # loglikelihood
   logL <- powerlaw_lognormal_loglikelihood(c(y0, beta, sdlog), x, y, weights = weights)
-  # kolmogorov-smirnov distance
-  ks <- powerlaw_lognormal_ks(x, y, y0, beta, sdlog)
   # return list
   list(
     loglikelihood = logL,
@@ -96,37 +87,7 @@ powerlaw_lognormal_fit <- function(
 #'   exponent, and log-standard deviation)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # generate some data
-#' y0 <- 20
-#' beta <- -0.5
-#' sdlog <- 0.2
-#' x <- seq(1, 7, l = 51)
-#' y <- y0*x^beta*rlnorm(length(x), -0.5*sdlog^2, sdlog)
-#' w <- runif(length(x), 0.8, 1.2)
-#'
-#' # check likelihood calculation
-#' par <- c(y0, beta, sdlog)
-#' powerlaw_lognormal_loglikelihood(par, x, y, weights = w)
-#' sum(w*dlnorm(y, log(y0) + beta*log(x) - 0.5*sdlog^2, sdlog, log = TRUE))
-#'
-#' # check first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 0)
-#' f1 <- powerlaw_lognormal_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 0)
-#' f2 <- powerlaw_lognormal_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 0)
-#' f3 <- powerlaw_lognormal_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 0)
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 1)
-#'
-#' # check second derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 1)
-#' f1 <- powerlaw_lognormal_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-#' f2 <- powerlaw_lognormal_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-#' f3 <- powerlaw_lognormal_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 2)
+#' @keywords internal
 #'
 powerlaw_lognormal_loglikelihood <- function(
     par,
@@ -177,52 +138,3 @@ powerlaw_lognormal_loglikelihood <- function(
 }
 
 
-#' Calculate Kolmogorov-Smirnov parameters for power-law fit + lognormal
-#'
-#' @description
-#' Calculate Kolmogorov-Smirnov parameter for power-law fit with lognormal
-#' distributed residuals
-#'
-#' @md
-#' @inheritParams powerlaw_normal_fit
-#' @param multiplier,exponent multiplier and exponent for power-law fit
-#'   describing the mean
-#' @param sdlog standard deviation for for power-law fit
-#'   describing the log-standard deviation of residuals
-#' @return list with fields
-#'   * `ks_distance`: Kolmogorov-Smirnov distance
-#' @examples
-#' y0 <- 20
-#' beta <- -0.5
-#' sdlog <- 0.3
-#' muL <- log(y0) - 0.5*sdlog^2
-#' x <- seq(1, 8, l = 101)
-#' y <- x^beta*rlnorm(length(x), muL, sdlog)
-#'
-#' ft <- powerlaw_lognormal_fit(x, y)
-#'
-#' powerlaw_lognormal_ks(x, y, ft$multiplier, ft$exponent, ft$sdlog)
-#'
-powerlaw_lognormal_ks <- function(
-    x,
-    y,
-    multiplier,
-    exponent,
-    sdlog
-) {
-  # prediction
-  C2 <- sort(stats::plnorm(
-    y,
-    log(multiplier) + exponent*log(x) - 0.5*sdlog^2,
-    sdlog
-  ))
-  # real cumulative
-  C1_lower <- seq(length(x))/(1 + length(x))
-  C1_upper <- C1_lower + 1/(1 + length(x))
-  # distance
-  ks_distance <- max(abs(c(C1_lower - C2, C1_upper - C2)))
-  # return list (in case of future expansion)
-  list(
-    ks_distance = ks_distance
-  )
-}

@@ -41,7 +41,7 @@ Determine best fitting Weibull distribution using weighted loglikelihood
 fitting.
 }
 \examples{
-x <- stats::rweibull(1000, 4, 2)
+x <- stats::rweibull(50, 4, 2)
 weibull_fit(x)
 
 }

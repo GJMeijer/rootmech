@@ -79,10 +79,5 @@ powerlaw_covariancematrix(
   exponent = ft$exponent,
   shape = ft$shape
 )
-powerlaw_covariancematrix(
-  x, y,
-  "weibull",
-  method = "bootstrap"
-)
 
 }

@@ -19,18 +19,4 @@ root
 \description{
 Root equation to solve for Gumbel fitting
 }
-\examples{
-# check if root is indeed first partial derivative of loglikelihood
-x <- stats::rweibull(50, shape = 4, scale = 2)
-mu <- 2
-theta <- 0.5
-par <- c(mu, theta)
-
-eps <- 1e-6
-f0 <- gumbel_loglikelihood(par, x)
-f1 <- gumbel_loglikelihood(par + c(eps, 0), x)
-f2 <- gumbel_loglikelihood(par + c(0, eps), x)
-(c(f1, f2) - f0)/eps
-gumbel_loglikelihood(par, x, deriv = 1)
-
-}
+\keyword{internal}

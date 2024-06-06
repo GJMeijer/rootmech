@@ -23,31 +23,4 @@ Calculate the weighted loglikelihood for a gumbel fit.
 Can also be used to calculate the first or second partial
 derivative with respect to fitting parameters.
 }
-\examples{
-# generate some data
-mu <- 20
-theta <- 2
-x <- rgumbel(20, mu, theta)
-w <- stats::runif(length(x), 0.9, 1.1)
-
-# check loglikelihood
-par <- c(mu, theta)
-gumbel_loglikelihood(par, x, weights = w)
-sum(w*dgumbel(x, mu, theta, log = TRUE))
-
-# test first derivative
-eps <- 1e-6
-f0 <- gumbel_loglikelihood(par, x, weights = w, deriv = 0)
-f1 <- gumbel_loglikelihood(par + c(eps, 0), x, weights = w, deriv = 0)
-f2 <- gumbel_loglikelihood(par + c(0, eps), x, weights = w, deriv = 0)
-(c(f1, f2) - f0)/eps
-gumbel_loglikelihood(par, x, weights = w, deriv = 1)
-
-#' # test second derivative
-f0 <- gumbel_loglikelihood(par, x, weights = w, deriv = 1)
-f1 <- gumbel_loglikelihood(par + c(eps, 0), x, weights = w, deriv = 1)
-f2 <- gumbel_loglikelihood(par + c(0, eps), x, weights = w, deriv = 1)
-(cbind(f1, f2) - f0)/eps
-gumbel_loglikelihood(par, x, weights = w, deriv = 2)
-
-}
+\keyword{internal}

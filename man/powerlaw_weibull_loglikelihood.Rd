@@ -34,46 +34,4 @@ Calculate the weighted loglikelihood for a power-law fit with weibull
 residuals. Can also be used to calculate the first or second partial
 derivative with respect to fitting parameters.
 }
-\examples{
-# generate some data
-y0 <- 20
-beta <- -0.5
-kappa <- 4
-lambda <- 1/gamma(1 + 1/kappa)
-x <- seq(1, 8, l = 5001)
-y <- y0*x^beta*rweibull(length(x), kappa, lambda)
-w <- runif(length(x), 0.8, 1.2)
-
-# check loglikelihood
-par <- c(y0, beta, kappa)
-powerlaw_weibull_loglikelihood(par, x, y, weights = w)
-sum(w*dweibull(y, kappa, y0*x^beta/gamma(1 + 1/kappa), log = TRUE))
-
-# test first derivative
-eps <- 1e-6
-f0 <- powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 0)
-f1 <- powerlaw_weibull_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 0)
-f2 <- powerlaw_weibull_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 0)
-f3 <- powerlaw_weibull_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 0)
-(c(f1, f2, f3) - f0)/eps
-powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 1)
-
-# test second derivative
-f0 <- powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 1)
-f1 <- powerlaw_weibull_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-f2 <- powerlaw_weibull_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-f3 <- powerlaw_weibull_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-(cbind(f1, f2, f3) - f0)/eps
-powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 2)
-
-# variance-covariance matrix
-J <- powerlaw_weibull_loglikelihood(
-  c(ft$multiplier, ft$exponent, ft$shape),
-  x, y, weights = w,
-  deriv = 2
-)
-C <- solve(-J)
-# correlation matrix
-C*outer(diag(C)^(-0.5), diag(C)^(-0.5))
-
-}
+\keyword{internal}

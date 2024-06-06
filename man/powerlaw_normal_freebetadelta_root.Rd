@@ -25,3 +25,4 @@ Root solve equation to obtain the exponent in power-law fitting
 with normal distribution with separate power-law describing the standard
 deviation
 }
+\keyword{internal}

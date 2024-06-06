@@ -397,11 +397,6 @@ powerlaw_predictioninterval <- function(
 #'   exponent = ft$exponent,
 #'   shape = ft$shape
 #' )
-#' powerlaw_covariancematrix(
-#'   x, y,
-#'   "weibull",
-#'   method = "bootstrap"
-#' )
 #'
 powerlaw_covariancematrix <- function(
     x,
@@ -862,7 +857,6 @@ powerlaw_ks <- function(
 #' weights <- x^4
 #'
 #' model <- "logistic"
-#' ft0 <- powerlaw_fit(x, y, model, weights = weights)
 #' ft1 <- powerlaw_fit_iterativeweighting(x, y, model, weights = weights)
 #'
 #' xp <- seq(min(x), max(x), l = 101)

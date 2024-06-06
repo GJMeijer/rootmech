@@ -26,3 +26,4 @@ function `powerlaw_normal_fit()`. The standard deviation power-law exponent
 The mean power-law exponent (beta = delta) is estimated using linear
 regression on log-transformed x and y data.
 }
+\keyword{internal}

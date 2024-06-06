@@ -34,36 +34,4 @@ Calculate the weighted loglikelihood for a power-law fit with lognormal
 residuals. Can also be used to calculate the first or second partial
 derivative with respect to fitting parameters.
 }
-\examples{
-# generate some data
-y0 <- 20
-beta <- -0.5
-sdlog <- 0.2
-x <- seq(1, 7, l = 51)
-y <- y0*x^beta*rlnorm(length(x), -0.5*sdlog^2, sdlog)
-w <- runif(length(x), 0.8, 1.2)
-
-# check likelihood calculation
-par <- c(y0, beta, sdlog)
-powerlaw_lognormal_loglikelihood(par, x, y, weights = w)
-sum(w*dlnorm(y, log(y0) + beta*log(x) - 0.5*sdlog^2, sdlog, log = TRUE))
-
-# check first derivative
-eps <- 1e-6
-f0 <- powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 0)
-f1 <- powerlaw_lognormal_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 0)
-f2 <- powerlaw_lognormal_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 0)
-f3 <- powerlaw_lognormal_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 0)
-(c(f1, f2, f3) - f0)/eps
-powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 1)
-
-# check second derivative
-eps <- 1e-6
-f0 <- powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 1)
-f1 <- powerlaw_lognormal_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-f2 <- powerlaw_lognormal_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-f3 <- powerlaw_lognormal_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-(cbind(f1, f2, f3) - f0)/eps
-powerlaw_lognormal_loglikelihood(par, x, y, weights = w, deriv = 2)
-
-}
+\keyword{internal}

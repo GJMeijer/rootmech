@@ -10,8 +10,8 @@ Authors@R:
              comment = c(ORCID = "0000-0002-2815-5480")),
       person(given = "University of Bath",
              role = c("cph")))
-Description: Fitting and plotting functions for root biomechanics parameter 
-    fitting.
+Description: Functions for power law fitting of root diameter versus root 
+  biomechanical properties such as tensile strength.
 License: file LICENSE
 Language: en-GB
 Encoding: UTF-8
@@ -20,9 +20,12 @@ Imports:
     shiny,
     plotly,
     rootSolve,
-    rhandsontable
+    rhandsontable,
+    grDevices
 RoxygenNote: 7.2.3
 Suggests: 
     rmarkdown,
-    knitr
+    knitr,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Config/testthat/edition: 3

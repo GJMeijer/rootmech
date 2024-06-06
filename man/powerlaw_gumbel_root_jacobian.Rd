@@ -25,22 +25,4 @@ derivative of function `powerlaw_gumbel_root()` with respect to input
 \description{
 Jacobian of root equation to solve for power-law Gumbel fitting.
 }
-\examples{
-# example data
-y0 <- 20
-beta <- -0.5
-k <- 4
-x <- seq(1, 6, l = 51)
-y <- y0*x^beta*stats::rweibull(length(x), 4, 1/gamma(1 + 1/k))
-w <- stats::runif(length(x), 0.8, 1.2)
-
-# test derivative
-par <- c(beta, k)
-eps <- 1e-6
-f0 <- powerlaw_gumbel_root(par, x, y, weights = w)
-f1 <- powerlaw_gumbel_root(par + c(eps, 0), x, y, weights = w)
-f2 <- powerlaw_gumbel_root(par + c(0, eps), x, y, weights = w)
-(cbind(f1, f2) - f0)/eps
-powerlaw_gumbel_root_jacobian(par, x, y, weights = w)
-
-}
+\keyword{internal}

@@ -63,12 +63,4 @@ yp <- ft$multiplier*xp^ft$exponent
 plot(x, y)
 lines(xp, yp, col = "red")
 
-# compare fit to linear regression (including means correction)
-ftl <- stats::lm(log(y) ~ log(x))
-betaL <- ftl$coef[2]
-alphaL <- ftl$coef[1]
-sdL <- sqrt(1/length(x)*sum((log(y) - alphaL - betaL*log(x))^2))
-c(exp(alphaL + sdL^2/2), betaL)
-c(ft$multiplier, ft$exponent)
-
 }

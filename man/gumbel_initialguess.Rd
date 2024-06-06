@@ -2,27 +2,23 @@
 % Please edit documentation in R/gumbel.R
 \name{gumbel_initialguess}
 \alias{gumbel_initialguess}
-\title{Initial guess for gumbel distribution fitting}
+\title{Initial guess for Gumbel distribution fitting}
 \usage{
 gumbel_initialguess(x, weights = rep(1, length(x)))
 }
-\arguments{
-\item{x}{array with observations}
-
-\item{weights}{weighting factor for each observation in \code{x}}
-}
 \value{
-initial guess for weibull shape parameter
+initial guess for Gumbel shape parameter
 }
 \description{
 Return an initial guess for the Gumbel scale parameter, to be used as a
 starting point in function `gumbel_fit()`.
 
-The estimate is made using linear regression on the linearlised cumulative
+The estimate is made using linear regression on the linearised cumulative
 density function, i.e by fitting
 
   log(-log(1 - P)) = mu/scale - y/scale
 
 where P is the cumulative density for each value x, and mu the
-location parameter of the gumbel distribution
+location parameter of the Gumbel distribution
 }
+\keyword{internal}

@@ -65,22 +65,23 @@ gumbel_fit <- function(
   )
 }
 
-#' Initial guess for gumbel distribution fitting
+#' Initial guess for Gumbel distribution fitting
 #'
 #' @description
 #' Return an initial guess for the Gumbel scale parameter, to be used as a
 #' starting point in function `gumbel_fit()`.
 #'
-#' The estimate is made using linear regression on the linearlised cumulative
+#' The estimate is made using linear regression on the linearised cumulative
 #' density function, i.e by fitting
 #'
 #'   log(-log(1 - P)) = mu/scale - y/scale
 #'
 #' where P is the cumulative density for each value x, and mu the
-#' location parameter of the gumbel distribution
+#' location parameter of the Gumbel distribution
 #'
-#' @inheritParams gumbel_fit
-#' @return initial guess for weibull shape parameter
+#' @export
+#' @return initial guess for Gumbel shape parameter
+#' @keywords internal
 #'
 gumbel_initialguess <- function(x, weights = rep(1, length(x))) {
   if (FALSE) {
@@ -113,32 +114,7 @@ gumbel_initialguess <- function(x, weights = rep(1, length(x))) {
 #' @param par vector with fitting parameters (location and scale parameter)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # generate some data
-#' mu <- 20
-#' theta <- 2
-#' x <- rgumbel(20, mu, theta)
-#' w <- stats::runif(length(x), 0.9, 1.1)
-#'
-#' # check loglikelihood
-#' par <- c(mu, theta)
-#' gumbel_loglikelihood(par, x, weights = w)
-#' sum(w*dgumbel(x, mu, theta, log = TRUE))
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- gumbel_loglikelihood(par, x, weights = w, deriv = 0)
-#' f1 <- gumbel_loglikelihood(par + c(eps, 0), x, weights = w, deriv = 0)
-#' f2 <- gumbel_loglikelihood(par + c(0, eps), x, weights = w, deriv = 0)
-#' (c(f1, f2) - f0)/eps
-#' gumbel_loglikelihood(par, x, weights = w, deriv = 1)
-#'
-#' #' # test second derivative
-#' f0 <- gumbel_loglikelihood(par, x, weights = w, deriv = 1)
-#' f1 <- gumbel_loglikelihood(par + c(eps, 0), x, weights = w, deriv = 1)
-#' f2 <- gumbel_loglikelihood(par + c(0, eps), x, weights = w, deriv = 1)
-#' (cbind(f1, f2) - f0)/eps
-#' gumbel_loglikelihood(par, x, weights = w, deriv = 2)
+#' @keywords internal
 #'
 gumbel_loglikelihood <- function(
     par,
@@ -188,19 +164,7 @@ gumbel_loglikelihood <- function(
 #' @inheritParams gumbel_fit
 #' @param theta shape parameter
 #' @return root
-#' @examples
-#' # check if root is indeed first partial derivative of loglikelihood
-#' x <- stats::rweibull(50, shape = 4, scale = 2)
-#' mu <- 2
-#' theta <- 0.5
-#' par <- c(mu, theta)
-#'
-#' eps <- 1e-6
-#' f0 <- gumbel_loglikelihood(par, x)
-#' f1 <- gumbel_loglikelihood(par + c(eps, 0), x)
-#' f2 <- gumbel_loglikelihood(par + c(0, eps), x)
-#' (c(f1, f2) - f0)/eps
-#' gumbel_loglikelihood(par, x, deriv = 1)
+#' @keywords internal
 #'
 gumbel_root <- function(theta, x, weights = rep(1, length(x))) {
   # coefficients
@@ -221,19 +185,7 @@ gumbel_root <- function(theta, x, weights = rep(1, length(x))) {
 #' @inheritParams gumbel_root
 #' @return derivative of function `gumbel_root()` with respect to input
 #'   argument `theta`
-#' @examples
-#' # check derivative
-#' mu <- 20
-#' theta <- 2
-#' x <- rgumbel(51, mu, theta)
-#' w <- stats::runif(length(x), 0.9, 1.1)
-#'
-#' # check derivative - compare analytical and numerical solutions
-#' eps <- 1e-6
-#' v0 <- gumbel_root(theta, x, weights = w)
-#' v1 <- gumbel_root(theta + eps, x, weights = w)
-#' (v1 - v0)/eps
-#' gumbel_root_jacobian(theta, x, weights = w)
+#' @keywords internal
 #'
 gumbel_root_jacobian <- function(theta, x, weights = rep(1, length(x))) {
   # coefficients
@@ -258,6 +210,7 @@ gumbel_root_jacobian <- function(theta, x, weights = rep(1, length(x))) {
 #' @param weights vector with weights for each x-value
 #' @param log if `TRUE`, return log-transformed probability densities
 #' @return vector with probability density for each value in x
+#' @export
 #' @examples
 #' dgumbel(seq(1, 3, l = 5), location = 2, scale = 2)
 #'
@@ -288,6 +241,7 @@ dgumbel <- function(
 #' @param location Gumbel location parameter
 #' @param scale Gumbel scale parameter
 #' @return vector with samples
+#' @export
 #' @examples
 #' hist(rgumbel(1000, location = 20, scale = 2))
 #'

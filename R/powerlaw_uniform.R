@@ -129,25 +129,7 @@ powerlaw_uniform_fit <- function(
 #' @param beta power-law exponent
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # generate some data
-#' y0 <- 20
-#' beta <- -0.5
-#' range <- 10
-#' x <- seq(1, 8, l = 101)
-#' y <- stats::runif(length(x), (y0 - 0.5*range)*x^beta, (y0 + 0.5*range)*x^beta)
-#'
-#' # fit
-#' ft <- powerlaw_uniform_fit(x, y)
-#'
-#' # check loglikelihood
-#' powerlaw_uniform_loglikelihood(ft$exponent, x, y)
-#' sum(stats::dunif(
-#'   y,
-#'   min = (ft$multiplier - 0.5*ft$width)*x^ft$exponent - 1e-9,
-#'   max = (ft$multiplier + 0.5*ft$width)*x^ft$exponent + 1e-9,
-#'   log = TRUE
-#' ))
+#' @keywords internal
 #'
 powerlaw_uniform_loglikelihood <- function(
     beta,
@@ -169,54 +151,5 @@ powerlaw_uniform_loglikelihood <- function(
     dupper_dbeta <- -y[iu]*log(x[iu])/x[iu]^beta
     (dlower_dbeta - dupper_dbeta)/(upper - lower)*sum(weights) - sum(weights*log(x))
   }
-}
-
-
-#' Calculate Kolmogorov-Smirnov parameters for power-law fit + uniform
-#'
-#' @description
-#' Calculate Kolmogorov-Smirnov parameter for power-law fit with uniformly
-#' distributed residuals
-#'
-#' @md
-#' @inheritParams powerlaw_normal_fit
-#' @param multiplier,exponent multiplier and exponent for power-law fit
-#'   describing the mean
-#' @param width with of the distribution, at x = 1
-#' @return list with fields
-#'   * `ks_distance`: Kolmogorov-Smirnov distance
-#' @examples
-#' y0 <- 20
-#' beta <- -0.5
-#' range <- 10
-#' x <- seq(1, 8, l = 51)
-#' y <- stats::runif(length(x), (y0 - 0.5*range)*x^beta, (y0 + 0.5*range)*x^beta)
-#'
-#' ft <- powerlaw_uniform_fit(x, y)
-#'
-#' powerlaw_uniform_ks(x, y, ft$multiplier, ft$exponent, ft$width)
-#'
-powerlaw_uniform_ks <- function(
-    x,
-    y,
-    multiplier,
-    exponent,
-    width
-) {
-  # prediction
-  C2 <- sort(stats::punif(
-    y,
-    (multiplier - 0.5*width)*x^exponent,
-    (multiplier + 0.5*width)*x^exponent
-  ))
-  # real cumulative
-  C1_lower <- seq(length(x))/(1 + length(x))
-  C1_upper <- C1_lower + 1/(1 + length(x))
-  # distance
-  ks_distance <- max(abs(c(C1_lower - C2, C1_upper - C2)))
-  # return list (in case of future expansion)
-  list(
-    ks_distance = ks_distance
-  )
 }
 

@@ -32,3 +32,4 @@ to be used in function `powerlaw_normal_fit()`. The mean power-law exponent
 
 Currently, a very simple guess delta = beta is made.
 }
+\keyword{internal}

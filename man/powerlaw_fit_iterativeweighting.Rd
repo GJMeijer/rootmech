@@ -111,7 +111,6 @@ y[x <= 3] <- 10*y[x <= 3]
 weights <- x^4
 
 model <- "logistic"
-ft0 <- powerlaw_fit(x, y, model, weights = weights)
 ft1 <- powerlaw_fit_iterativeweighting(x, y, model, weights = weights)
 
 xp <- seq(min(x), max(x), l = 101)

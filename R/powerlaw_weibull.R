@@ -85,47 +85,7 @@ powerlaw_weibull_fit <- function(
 #'   exponent, and weibull shape parameter)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # generate some data
-#' y0 <- 20
-#' beta <- -0.5
-#' kappa <- 4
-#' lambda <- 1/gamma(1 + 1/kappa)
-#' x <- seq(1, 8, l = 5001)
-#' y <- y0*x^beta*rweibull(length(x), kappa, lambda)
-#' w <- runif(length(x), 0.8, 1.2)
-#'
-#' # check loglikelihood
-#' par <- c(y0, beta, kappa)
-#' powerlaw_weibull_loglikelihood(par, x, y, weights = w)
-#' sum(w*dweibull(y, kappa, y0*x^beta/gamma(1 + 1/kappa), log = TRUE))
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 0)
-#' f1 <- powerlaw_weibull_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 0)
-#' f2 <- powerlaw_weibull_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 0)
-#' f3 <- powerlaw_weibull_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 0)
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 1)
-#'
-#' # test second derivative
-#' f0 <- powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 1)
-#' f1 <- powerlaw_weibull_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-#' f2 <- powerlaw_weibull_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-#' f3 <- powerlaw_weibull_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_weibull_loglikelihood(par, x, y, weights = w, deriv = 2)
-#'
-#' # variance-covariance matrix
-#' J <- powerlaw_weibull_loglikelihood(
-#'   c(ft$multiplier, ft$exponent, ft$shape),
-#'   x, y, weights = w,
-#'   deriv = 2
-#' )
-#' C <- solve(-J)
-#' # correlation matrix
-#' C*outer(diag(C)^(-0.5), diag(C)^(-0.5))
+#' @keywords internal
 #'
 powerlaw_weibull_loglikelihood <- function(
     par,
@@ -202,6 +162,7 @@ powerlaw_weibull_loglikelihood <- function(
 #'
 #' @inheritParams powerlaw_weibull_fit
 #' @return estimate for power-law exponent and weibull shape parameter
+#' @keywords internal
 #'
 powerlaw_weibull_initialguess <- function(x, y, weights = rep(1, length(x))) {
   # guess exponent from linear regression on log-data
@@ -223,6 +184,7 @@ powerlaw_weibull_initialguess <- function(x, y, weights = rep(1, length(x))) {
 #' @param par fitting parameter (power-law exponent, and Weibull shape
 #'   parameter)
 #' @return two-parameter vector with roots
+#' @keywords internal
 #'
 powerlaw_weibull_root <- function(
     par,
@@ -256,22 +218,7 @@ powerlaw_weibull_root <- function(
 #' @inheritParams powerlaw_weibull_root
 #' @return derivative of function `powerlaw_weibull_root()` with respect to input
 #'   argument `par`
-#' @examples
-#' # test jacobian - compare analytical function to numerical approximation
-#' y0 <- 20
-#' beta <- -0.5
-#' kappa <- 10
-#' x <- seq(1, 8, l = 51)
-#' y <- y0*x^beta*rweibull(length(x), kappa, lambda)
-#' weights <- runif(length(x), 0.8, 1.2)
-#' par <- c(beta, kappa)
-#'
-#' eps <- 1e-6
-#' j0 <- powerlaw_weibull_root(par, x, y, weights = weights)
-#' j1 <- powerlaw_weibull_root(par + c(eps, 0), x, y, weights = weights)
-#' j2 <- powerlaw_weibull_root(par + c(0, eps), x, y, weights = weights)
-#' (cbind(j1, j2) - j0)/eps
-#' powerlaw_weibull_root_jacobian(par, x, y, weights = weights)
+#' @keywords internal
 #'
 powerlaw_weibull_root_jacobian <- function(
     par,
@@ -303,79 +250,3 @@ powerlaw_weibull_root_jacobian <- function(
   )
 }
 
-
-#' Calculate Kolmogorov-Smirnov parameters for power-law fit + weibull
-#'
-#' @description
-#' Calculate Kolmogorov-Smirnov parameter for power-law fit with weibull
-#' distributed residuals
-#'
-#' @md
-#' @inheritParams powerlaw_weibull_fit
-#' @param multiplier,exponent multiplier and exponent for power-law fit
-#'   describing the mean
-#' @param shape weibull shape parameter
-#' @param n number of points to use to plot fitted cumulative curve
-#' @return list with fields
-#'   * `ks_distance`: Kolmogorov-Smirnov distance
-#'   * `experimental`: dataframe (`x`, `y`) with cumulative experimental data
-#'   * `fit`: dataframe (`x`, `y`) with cumulative fitted trace
-#'   * `difference`: dataframe (`x`, `y`) for line showing location of
-#'     maximum KS distance
-#' @examples
-#' #' generate some data
-#' y0 <- 20
-#' beta <- -0.5
-#' kappa <- 10
-#' lambda <- 1/gamma(1 + 1/kappa)
-#' x <- seq(1, 8, l = 101)
-#' y <- y0*x^beta*rweibull(length(x), kappa, lambda)
-#' weights <- runif(length(x), 0.8, 1.2)
-#'
-#' # fit
-#' ft <- powerlaw_weibull_fit(x, y, weights = weights)
-#'
-#' powerlaw_weibull_ks(x, y, ft$multiplier, ft$exponent, ft$shape)
-#'
-powerlaw_weibull_ks <- function(
-    x,
-    y,
-    multiplier,
-    exponent,
-    shape,
-    n = 101
-) {
-  # normalise
-  yn <- sort(y/(multiplier*x^exponent))
-  # prediction
-  C2 <- rep(stats::pweibull(yn, shape = shape, scale = 1/gamma(1 + 1/shape)), each = 2)
-  # real cumulative
-  nx <- length(x)
-  C1 <- rep(seq(0, 1, l = nx + 1), each = 2)[2:(2*nx + 1)]
-  # distance
-  distances <- C2 - C1
-  i_max <- which.max(distances)
-  # experimental cumulative trace
-  df_exp <- data.frame(
-    x = rep(yn, each = 2),
-    y = C1
-  )
-  # fitted cumulative trace
-  xp <- seq(min(yn, na.rm = TRUE), max(yn, na.rm = TRUE), l = n)
-  df_fit <- data.frame(
-    x = xp,
-    y = stats::pweibull(xp, shape, scale = 1/gamma(1 + 1/shape))
-  )
-  # line for max
-  df_con <- data.frame(
-    x = rep(yn[floor((i_max + 1)/2)], 2),
-    y = c(C1[i_max], C2[i_max])
-  )
-  # return list (in case of future expansion)
-  list(
-    ks_distance = distances[i_max],
-    experimental = df_exp,
-    fit = df_fit,
-    difference = df_con
-  )
-}

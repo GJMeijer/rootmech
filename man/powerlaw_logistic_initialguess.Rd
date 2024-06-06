@@ -47,3 +47,4 @@ the mean.
 The scale parameter is then estimated from the standard deviation using
 the method of moments, i.e. scale = sd*sqrt(3)/pi
 }
+\keyword{internal}

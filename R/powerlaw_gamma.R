@@ -137,36 +137,7 @@ powerlaw_gamma_fit <- function(
 #'   exponent, and gamma shape parameter)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # parameters
-#' x <- seq(1, 7, l = 101)
-#' y0 <- 25
-#' beta <- -0.5
-#' k <- 4
-#' y <- y0*x^beta*stats::rgamma(length(x), shape = k, scale = 1/k)
-#' w <- stats::runif(length(x), 0.8, 1.2)
-#'
-#' # test logliklihood
-#' sum(w*stats::dgamma(y, k, scale = y0*x^beta/k, log = TRUE))
-#' powerlaw_gamma_loglikelihood(c(y0, beta, k), x, y, weights = w)
-#'
-#' # Test first derivative
-#' eps <- 1e-9
-#' par <- c(y0, beta, k)
-#' f0 <- powerlaw_gamma_loglikelihood(par, x, y, weights = w)
-#' f1 <- powerlaw_gamma_loglikelihood(par + c(eps, 0, 0), x, y, weights = w)
-#' f2 <- powerlaw_gamma_loglikelihood(par + c(0, eps, 0), x, y, weights = w)
-#' f3 <- powerlaw_gamma_loglikelihood(par + c(0, 0, eps), x, y, weights = w)
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_gamma_loglikelihood(par, x, y, weights = w, deriv = 1)
-#'
-#' # test second derivative
-#' f0 <- powerlaw_gamma_loglikelihood(par, x, y, weights = w, deriv = 1)
-#' f1 <- powerlaw_gamma_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-#' f2 <- powerlaw_gamma_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-#' f3 <- powerlaw_gamma_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_gamma_loglikelihood(par, x, y, weights = w, deriv = 2)
+#' @keywords internal
 #'
 powerlaw_gamma_loglikelihood <- function(
     par,
@@ -227,6 +198,7 @@ powerlaw_gamma_loglikelihood <- function(
 #' @inheritParams powerlaw_gamma_fit
 #' @param beta power-law exponent to solve for
 #' @return value of root function to solve
+#' @keywords internal
 #'
 powerlaw_gamma_root_beta <- function(
     beta,
@@ -252,6 +224,7 @@ powerlaw_gamma_root_beta <- function(
 #'
 #' @inheritParams powerlaw_gamma_root_beta
 #' @return derivative of `powerlaw_gamma_root_beta()` with respect to `beta`
+#' @keywords internal
 #'
 powerlaw_gamma_root_beta_jacobian <- function(
     beta,
@@ -279,6 +252,7 @@ powerlaw_gamma_root_beta_jacobian <- function(
 #' @param k unknown gamma distribution shape parameter
 #' @param beta known power-law exponen
 #' @return value of root function to solve
+#' @keywords internal
 #'
 powerlaw_gamma_root_k <- function(
     k,
@@ -305,6 +279,7 @@ powerlaw_gamma_root_k <- function(
 #'
 #' @inheritParams powerlaw_gamma_root_k
 #' @return derivative of `powerlaw_gamma_root_beta()` with respect to `k`
+#' @keywords internal
 #'
 powerlaw_gamma_root_k_jacobian <- function(
     k,
@@ -319,45 +294,3 @@ powerlaw_gamma_root_k_jacobian <- function(
   c1*(1/k - psigamma(k, deriv = 1))
 }
 
-
-#' Calculate Kolmogorov-Smirnov parameters for power-law fit + gamma
-#'
-#' @description
-#' Calculate Kolmogorov-Smirnov parameter for power-law fit with gamma
-#' distributed residuals
-#'
-#' @md
-#' @inheritParams powerlaw_normal_fit
-#' @param multiplier,exponent multiplier and exponent for power-law fit
-#'   describing the mean
-#' @param shape shape parameter for gamma distribution of residuals
-#' @return list with fields
-#'   * `ks_distance`: Kolmogorov-Smirnov distance
-#' @examples
-#' x <- seq(1, 7, l = 51)
-#' y <- stats::rgamma(length(x), 4, scale = 2*1/4)
-#' powerlaw_gamma_ks(x, y, 2, 0, 4)
-#'
-powerlaw_gamma_ks <- function(
-    x,
-    y,
-    multiplier,
-    exponent,
-    shape
-) {
-  # prediction
-  C2 <- sort(stats::pgamma(
-    y,
-    shape,
-    scale = (multiplier*x^exponent)/shape
-  ))
-  # real cumulative
-  C1_lower <- seq(length(x))/(1 + length(x))
-  C1_upper <- C1_lower + 1/(1 + length(x))
-  # distance
-  ks_distance <- max(abs(c(C1_lower - C2, C1_upper - C2)))
-  # return list (in case of future expansion)
-  list(
-    ks_distance = ks_distance
-  )
-}

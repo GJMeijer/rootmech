@@ -30,24 +30,4 @@ derivative of `powerlaw_normal_freebetadelta_root()` with respect to
 Returns the derivative of the function `powerlaw_normal_freebetadelta_root()`
 with respect to input argument `par`
 }
-\examples{
-# parameters
-y0 <- 20
-beta <- -0.25
-sigma0 <- 2.5
-delta <- -0.5
-x <- seq(1, 8, l = 50001)
-mu <- y0*x^beta
-sigma <- sigma0*x^delta
-y <- abs(stats::rnorm(length(x), mu, sigma))
-w <- stats::runif(length(x), 0.9, 1.1)
-par <- c(beta, delta)
-
-eps <- 1e-6
-f0 <- powerlaw_normal_freebetadelta_root(par, x, y, weights = w)
-f1 <- powerlaw_normal_freebetadelta_root(par + c(eps, 0), x, y, weights = w)
-f2 <- powerlaw_normal_freebetadelta_root(par + c(0, eps), x, y, weights = w)
-(cbind(f1, f2) - f0)/eps
-powerlaw_normal_freebetadelta_root_jacobian(par, x, y, weights = w)
-
-}
+\keyword{internal}

@@ -87,28 +87,7 @@ numeric2character <- function(x, digits = 3, round = FALSE) {
   if (round == TRUE) {
     xr <- round(x, digits = digits)
     digits2 <- digits + floor(log10(abs(x))) + 1
-    purrr::map2_chr(
-      xr, digits2,
-      function(x, n) {
-        if (n <= 0) {
-          if (digits > 0) {
-            paste0(c("0.", rep(0, digits)), collapse = "")
-          } else {
-            "0"
-          }
-        } else {
-          gsub(
-            "\\.$", "",
-            formatC(
-              x,
-              digits = n,
-              format = "fg",
-              flag = "#"
-            )
-          )
-        }
-      }
-    )
+    numeric2character(x, digits = digits2)
   } else {
     gsub(
       "\\.$", "",

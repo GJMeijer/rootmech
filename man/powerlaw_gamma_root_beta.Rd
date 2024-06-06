@@ -24,3 +24,4 @@ value of root function to solve
 Root solve equation to obtain the exponent in power-law fitting
 with gamma-distribution
 }
+\keyword{internal}

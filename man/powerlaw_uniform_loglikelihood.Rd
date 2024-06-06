@@ -33,24 +33,4 @@ Calculate the weighted loglikelihood for a power-law fit with uniform
 residuals. Can also be used to calculate the first partial
 derivative with respect to fitting parameters.
 }
-\examples{
-# generate some data
-y0 <- 20
-beta <- -0.5
-range <- 10
-x <- seq(1, 8, l = 101)
-y <- stats::runif(length(x), (y0 - 0.5*range)*x^beta, (y0 + 0.5*range)*x^beta)
-
-# fit
-ft <- powerlaw_uniform_fit(x, y)
-
-# check loglikelihood
-powerlaw_uniform_loglikelihood(ft$exponent, x, y)
-sum(stats::dunif(
-  y,
-  min = (ft$multiplier - 0.5*ft$width)*x^ft$exponent - 1e-9,
-  max = (ft$multiplier + 0.5*ft$width)*x^ft$exponent + 1e-9,
-  log = TRUE
-))
-
-}
+\keyword{internal}

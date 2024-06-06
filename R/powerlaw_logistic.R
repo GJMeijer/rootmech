@@ -92,6 +92,7 @@ powerlaw_logistic_fit <- function(
 #' @inheritParams powerlaw_logistic_fit
 #' @return vector with initial guess for power-law multiplier, power-law
 #'   exponent, and logistic shape parameter (at x = 1).
+#' @keywords internal
 #'
 powerlaw_logistic_initialguess <- function(
     x,
@@ -127,36 +128,7 @@ powerlaw_logistic_initialguess <- function(
 #'   exponent, and logistic shape parameter)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # parameters and data
-#' y0 <- 20
-#' beta <- -0.5
-#' s0 <- 4
-#' x <- seq(1, 8, l = 100)
-#' y <- stats::rlogis(length(x), y0*x^beta, s0*x^beta)
-#' w <- runif(length(x), 0.8, 1.2)
-#'
-#' # check loglikelihood function
-#' par <- c(y0, beta, s0)
-#' powerlaw_logistic_loglikelihood(par, x, y, weights = w, deriv = 0)
-#' sum(w*stats::dlogis(y, y0*x^beta, s0*x^beta, log = TRUE))
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_logistic_loglikelihood(par, x, y, weights = w, deriv = 0)
-#' f1 <- powerlaw_logistic_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 0)
-#' f2 <- powerlaw_logistic_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 0)
-#' f3 <- powerlaw_logistic_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 0)
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_logistic_loglikelihood(par, x, y, weights = w, deriv = 1)
-#'
-#' # test second derivative
-#' f0 <- powerlaw_logistic_loglikelihood(par, x, y, weights = w, deriv = 1)
-#' f1 <- powerlaw_logistic_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-#' f2 <- powerlaw_logistic_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-#' f3 <- powerlaw_logistic_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_logistic_loglikelihood(par, x, y, weights = w, deriv = 2)
+#' @keywords internal
 #'
 powerlaw_logistic_loglikelihood <- function(
     par,
@@ -218,52 +190,3 @@ powerlaw_logistic_loglikelihood <- function(
   }
 }
 
-
-#' Calculate Kolmogorov-Smirnov parameters for power-law fit + logistic
-#'
-#' @description
-#' Calculate Kolmogorov-Smirnov parameter for power-law fit with logistic
-#' distributed residuals
-#'
-#' @md
-#' @inheritParams powerlaw_normal_fit
-#' @param multiplier,exponent multiplier and exponent for power-law fit
-#'   describing the mean
-#' @param scale scale parameter for standard deviation of residuals, at x = 1
-#' @return list with fields
-#'   * `ks_distance`: Kolmogorov-Smirnov distance
-#' @examples
-#' y0 <- 20
-#' beta <- -0.5
-#' s0 <- 4
-#' x <- seq(1, 6, l = 51)
-#' y <- abs(rlogis(length(x), y0*x^beta, s0*x^beta))
-#' w <- runif(length(x), 0.8, 1.2)
-#'
-#' ft <- powerlaw_logistic_fit(x, y, weights = w)
-#'
-#' powerlaw_logistic_ks(x, y, ft$multiplier, ft$exponent, ft$scale)
-#'
-powerlaw_logistic_ks <- function(
-    x,
-    y,
-    multiplier,
-    exponent,
-    scale
-) {
-  # prediction
-  C2 <- sort(stats::plogis(
-    y,
-    multiplier*x^exponent,
-    scale*x^exponent
-  ))
-  # real cumulative
-  C1_lower <- seq(length(x))/(1 + length(x))
-  C1_upper <- C1_lower + 1/(1 + length(x))
-  # distance
-  ks_distance <- max(abs(c(C1_lower - C2, C1_upper - C2)))
-  # return list (in case of future expansion)
-  list(
-    ks_distance = ks_distance
-  )
-}

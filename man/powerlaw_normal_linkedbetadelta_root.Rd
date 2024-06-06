@@ -25,3 +25,4 @@ Root solve equation to obtain the mean exponent in power-law
 fitting with normal distribution (beta). Power-law exponent for the
 standard deviation (delta) is assumed to be equal to beta.
 }
+\keyword{internal}

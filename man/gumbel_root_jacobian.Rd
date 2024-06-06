@@ -20,18 +20,4 @@ derivative of function `gumbel_root()` with respect to input
 \description{
 Jacobian of root equation to solve for Gumbel fitting.
 }
-\examples{
-# check derivative
-mu <- 20
-theta <- 2
-x <- rgumbel(51, mu, theta)
-w <- stats::runif(length(x), 0.9, 1.1)
-
-# check derivative - compare analytical and numerical solutions
-eps <- 1e-6
-v0 <- gumbel_root(theta, x, weights = w)
-v1 <- gumbel_root(theta + eps, x, weights = w)
-(v1 - v0)/eps
-gumbel_root_jacobian(theta, x, weights = w)
-
-}
+\keyword{internal}

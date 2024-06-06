@@ -33,3 +33,4 @@ Root solve equation to obtain the standard deviation exponent in power-law
 fitting with normal distribution. Power-law exponent for mean (beta)
 is assumed to be known.
 }
+\keyword{internal}

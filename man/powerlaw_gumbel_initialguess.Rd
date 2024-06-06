@@ -47,3 +47,4 @@ The power-law exponent is estimated using linear regression on
 log-transformed x and y data. The Gumbel shape parameter is subsequently
 estimated from Gumbel fitting of the scaled data (y/x^beta)
 }
+\keyword{internal}

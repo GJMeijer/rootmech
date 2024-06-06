@@ -105,41 +105,7 @@ powerlaw_gumbel_fit <- function(
 #'   exponent, and gumbel shape parameter at x = 1)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # define parameters
-#' y0 <- 20
-#' beta <- -0.5
-#' theta0 <- 4
-#' x <- seq(1, 6, l = 100)
-#' gamma <- 0.5772156649
-#' theta <- theta0*x^beta
-#' mu <- (y0 - gamma*theta0)*x^beta
-#' weights <- stats::runif(length(x), 0.9, 1.1)
-#' y <- ordinal::rgumbel(length(x), mu, theta)
-#'
-#' # check loglikelihood
-#' sum(weights*dgumbel(y, mu, theta, log = TRUE))
-#' par <- c(y0, beta, theta0)
-#' powerlaw_gumbel_loglikelihood(par, x, y, weights = weights)
-#' p <- (1/theta)*exp((mu - y)/theta - exp((mu - y)/theta))
-#' sum(weights*log(p))
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 0)
-#' f1 <- powerlaw_gumbel_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 0)
-#' f2 <- powerlaw_gumbel_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 0)
-#' f3 <- powerlaw_gumbel_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 0)
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 1)
-#'
-#' # test second derivative
-#' f0 <- powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 1)
-#' f1 <- powerlaw_gumbel_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-#' f2 <- powerlaw_gumbel_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-#' f3 <- powerlaw_gumbel_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 2)
+#' @keywords internal
 #'
 powerlaw_gumbel_loglikelihood <- function(
     par,
@@ -214,6 +180,7 @@ powerlaw_gumbel_loglikelihood <- function(
 #'
 #' @inheritParams powerlaw_gumbel_fit
 #' @return estimate for power-law exponent and Gumbel scale parameter at x = 1
+#' @keywords internal
 #'
 powerlaw_gumbel_initialguess <- function(
     x,
@@ -248,6 +215,7 @@ powerlaw_gumbel_initialguess <- function(
 #' @param par fitting parameter (power-law exponent, and gumbel shape parameter
 #'   at x = 1)
 #' @return two-parameter vector with roots
+#' @keywords internal
 #'
 powerlaw_gumbel_root <- function(
     par,
@@ -282,23 +250,7 @@ powerlaw_gumbel_root <- function(
 #' @inheritParams powerlaw_gumbel_root
 #' @return derivative of function `powerlaw_gumbel_root()` with respect to input
 #'   argument `par`
-#' @examples
-#' # example data
-#' y0 <- 20
-#' beta <- -0.5
-#' k <- 4
-#' x <- seq(1, 6, l = 51)
-#' y <- y0*x^beta*stats::rweibull(length(x), 4, 1/gamma(1 + 1/k))
-#' w <- stats::runif(length(x), 0.8, 1.2)
-#'
-#' # test derivative
-#' par <- c(beta, k)
-#' eps <- 1e-6
-#' f0 <- powerlaw_gumbel_root(par, x, y, weights = w)
-#' f1 <- powerlaw_gumbel_root(par + c(eps, 0), x, y, weights = w)
-#' f2 <- powerlaw_gumbel_root(par + c(0, eps), x, y, weights = w)
-#' (cbind(f1, f2) - f0)/eps
-#' powerlaw_gumbel_root_jacobian(par, x, y, weights = w)
+#' @keywords internal
 #'
 powerlaw_gumbel_root_jacobian <- function(
     par,
@@ -335,58 +287,3 @@ powerlaw_gumbel_root_jacobian <- function(
   )
 }
 
-
-#' Calculate Kolmogorov-Smirnov parameters for power-law fit + gumbel
-#'
-#' @description
-#' Calculate Kolmogorov-Smirnov parameter for power-law fit with gumbel
-#' distributed residuals
-#'
-#' @md
-#' @inheritParams powerlaw_gumbel_fit
-#' @param multiplier,exponent multiplier and exponent for power-law fit
-#'   describing the mean
-#' @param scale gumbel scale parameter
-#' @return list with fields
-#'   * `ks_distance`: Kolmogorov-Smirnov distance
-#' @examples
-#' # generate some data
-#' y0 <- 20
-#' beta <- -0.5
-#' theta0 <- 2
-#' gamma <- 0.57721566490153286060651209008240243104215933593992
-#' x <- seq(1, 6, l = 51)
-#' y <- y0*x^beta*rgumbel(
-#'   length(x),
-#'   1 - gamma*theta0/y0,
-#'   theta0/y0
-#' )
-#'
-#' # fit
-#' ft <- powerlaw_gumbel_fit(x, y)
-#'
-#' # ks distance
-#' powerlaw_gumbel_ks(x, y, ft$multiplier, ft$exponent, ft$scale)
-#'
-powerlaw_gumbel_ks <- function(
-    x,
-    y,
-    multiplier,
-    exponent,
-    scale,
-    gamma = 0.57721566490153286060651209008240243104215933593992
-) {
-  # prediction
-  theta <- scale*x^exponent
-  mu <- multiplier*x^exponent - theta*gamma
-  C2 <- sort(exp(-exp((mu - y)/theta)))
-  # real cumulative
-  C1_lower <- seq(length(x))/(1 + length(x))
-  C1_upper <- C1_lower + 1/(1 + length(x))
-  # distance
-  ks_distance <- max(abs(c(C1_lower - C2, C1_upper - C2)))
-  # return list (in case of future expansion)
-  list(
-    ks_distance = ks_distance
-  )
-}

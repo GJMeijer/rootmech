@@ -20,19 +20,4 @@ derivative of function `weibull_root()` with respect to input
 \description{
 Jacobian of root equation to solve for Weibull fitting.
 }
-\examples{
-# parameters
-shape <- 4
-
-# create some data
-x <- stats::rweibull(50, shape, 2)
-w <- stats::runif(length(x))
-
-# check derivative - compare analytical and numerical solutions
-eps <- 1e-6
-v0 <- weibull_root(shape, x, weights = w)
-v1 <- weibull_root(shape + eps, x, weights = w)
-(v1 - v0)/eps
-weibull_root_jacobian(shape, x, weights = w)
-
-}
+\keyword{internal}

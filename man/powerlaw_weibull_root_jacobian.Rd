@@ -25,21 +25,4 @@ derivative of function `powerlaw_weibull_root()` with respect to input
 \description{
 Jacobian of root equation to solve for power-law Weibull fitting.
 }
-\examples{
-# test jacobian - compare analytical function to numerical approximation
-y0 <- 20
-beta <- -0.5
-kappa <- 10
-x <- seq(1, 8, l = 51)
-y <- y0*x^beta*rweibull(length(x), kappa, lambda)
-weights <- runif(length(x), 0.8, 1.2)
-par <- c(beta, kappa)
-
-eps <- 1e-6
-j0 <- powerlaw_weibull_root(par, x, y, weights = weights)
-j1 <- powerlaw_weibull_root(par + c(eps, 0), x, y, weights = weights)
-j2 <- powerlaw_weibull_root(par + c(0, eps), x, y, weights = weights)
-(cbind(j1, j2) - j0)/eps
-powerlaw_weibull_root_jacobian(par, x, y, weights = weights)
-
-}
+\keyword{internal}

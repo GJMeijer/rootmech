@@ -24,3 +24,4 @@ two-parameter vector with roots
 \description{
 Root equation to solve for power-law Gumbel fitting
 }
+\keyword{internal}

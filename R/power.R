@@ -86,15 +86,7 @@ power_fit <- function(
 #' @inheritParams power_fit
 #' @param b power coefficient
 #' @return loglikelihood score
-#' @examples
-#' b <- 2
-#' x <- seq(1, 7, l = 101)^(1/b)
-#'
-#' eps <- 1e-6
-#' f0 <- power_loglikelihood(b, x)
-#' f1 <- power_loglikelihood(b + eps, x)
-#' (f1 - f0)/eps
-#' power_root(b, x)
+#' @keywords internal
 #'
 power_loglikelihood <- function(
     b,
@@ -128,6 +120,7 @@ power_loglikelihood <- function(
 #' @inheritParams power_fit
 #' @param b value for exponent
 #' @return derivative of loglikelihood score
+#' @keywords internal
 #'
 power_root <- function(
     b,

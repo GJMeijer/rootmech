@@ -24,3 +24,4 @@ derivative of `powerlaw_gamma_root_beta()` with respect to `beta`
 Returns the derivative of the function `powerlaw_gamma_root_beta()`
 with respect to input argument `beta`
 }
+\keyword{internal}

@@ -56,3 +56,4 @@ power-law exponents are tried, on the domain
 (beta_lm + `sd_exponent_range`). The beta and delta value of the fit
 with the lowest loglikelihood are taken as the initial guess
 }
+\keyword{internal}

@@ -33,3 +33,4 @@ probability distribution function. By solving this function == 0, the
 power coefficient at which the loglikelihood score is maximised can be
 found.
 }
+\keyword{internal}

@@ -37,40 +37,4 @@ Calculate the weighted loglikelihood for a power-law fit with gumbel
 residuals. Can also be used to calculate the first or second partial
 derivative with respect to fitting parameters.
 }
-\examples{
-# define parameters
-y0 <- 20
-beta <- -0.5
-theta0 <- 4
-x <- seq(1, 6, l = 100)
-gamma <- 0.5772156649
-theta <- theta0*x^beta
-mu <- (y0 - gamma*theta0)*x^beta
-weights <- stats::runif(length(x), 0.9, 1.1)
-y <- ordinal::rgumbel(length(x), mu, theta)
-
-# check loglikelihood
-sum(weights*dgumbel(y, mu, theta, log = TRUE))
-par <- c(y0, beta, theta0)
-powerlaw_gumbel_loglikelihood(par, x, y, weights = weights)
-p <- (1/theta)*exp((mu - y)/theta - exp((mu - y)/theta))
-sum(weights*log(p))
-
-# test first derivative
-eps <- 1e-6
-f0 <- powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 0)
-f1 <- powerlaw_gumbel_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 0)
-f2 <- powerlaw_gumbel_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 0)
-f3 <- powerlaw_gumbel_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 0)
-(c(f1, f2, f3) - f0)/eps
-powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 1)
-
-# test second derivative
-f0 <- powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 1)
-f1 <- powerlaw_gumbel_loglikelihood(par + c(eps, 0, 0), x, y, weights = w, deriv = 1)
-f2 <- powerlaw_gumbel_loglikelihood(par + c(0, eps, 0), x, y, weights = w, deriv = 1)
-f3 <- powerlaw_gumbel_loglikelihood(par + c(0, 0, eps), x, y, weights = w, deriv = 1)
-(cbind(f1, f2, f3) - f0)/eps
-powerlaw_gumbel_loglikelihood(par, x, y, weights = w, deriv = 2)
-
-}
+\keyword{internal}

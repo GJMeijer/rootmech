@@ -26,3 +26,4 @@ value of root function to solve
 Root solve equation to obtain the Gamma distribution shape parameter
 in power-law fitting with gamma-distribution
 }
+\keyword{internal}

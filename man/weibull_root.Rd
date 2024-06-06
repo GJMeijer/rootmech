@@ -19,3 +19,4 @@ root
 \description{
 Root equation to solve for Weibull fitting
 }
+\keyword{internal}

@@ -26,3 +26,4 @@ The power-law exponent is estimated using linear regression on
 log-transformed x and y data. The weibull shape parameter is subsequently
 estimated from weibull fitting of the scaled data (y/x^beta)
 }
+\keyword{internal}

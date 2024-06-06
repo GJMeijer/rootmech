@@ -239,59 +239,6 @@ powerlaw_normal_fit <- function(
 #' The mean power-law exponent (beta) is estimated using linear regression on
 #' log-transformed x and y data.
 #'
-#' The standard deviation power-law exponent (delta) is subsequently fitted
-#' using loglikelihood root solving, assuming <beta> as fixed.
-#'
-#' @inheritParams powerlaw_normal_fit
-#' @return estimate for power-law exponents for the mean and standard deviation
-#'
-powerlaw_normal_freebetadelta_initialguess_old <- function(
-    x,
-    y,
-    weights = rep(1, length(x)),
-    method = "bisection",
-    range = c(-1, 1)
-) {
-  # initial guess for beta - linear regression on log-transformed data
-  beta <- powerlaw_normal_freebeta_initialguess(
-    x, y, weights = weights
-  )
-  delta <- 0
-  # refine guess for beta - normal fit with heteroscedastic sds
-  beta <- powerlaw_normal_fit(
-    x,
-    y,
-    weights = weights,
-    sd_exponent = delta,
-    start = beta,
-    method = method,
-    range = range
-  )$exponent
-  # make guess for delta - assume known value of beta
-  delta <- powerlaw_normal_fit(
-    x,
-    y,
-    weights = weights,
-    exponent = beta,
-    sd_exponent = NULL,
-    start = beta,
-    method = method,
-    range = range
-  )$sd_exponent
-  # return starting guess
-  c(beta, delta)
-}
-
-
-#' Generate initial guess for `powerlaw_normal_fit()` with two unknown exponents
-#'
-#' @description
-#' Generate an initial guess for mean and standard deviation power-law
-#' exponents, to be used in function `powerlaw_normal_fit()`.
-#'
-#' The mean power-law exponent (beta) is estimated using linear regression on
-#' log-transformed x and y data.
-#'
 #' Subsequently, `n` equally spaced guess for the standard deviation
 #' power-law exponents are tried, on the domain
 #' (beta_lm + `sd_exponent_range`). The beta and delta value of the fit
@@ -299,6 +246,7 @@ powerlaw_normal_freebetadelta_initialguess_old <- function(
 #'
 #' @inheritParams powerlaw_normal_fit
 #' @return estimate for power-law exponents for the mean and standard deviation
+#' @keywords internal
 #'
 powerlaw_normal_freebetadelta_initialguess <- function(
     x,
@@ -355,66 +303,7 @@ powerlaw_normal_freebetadelta_initialguess <- function(
 #'   power-law exponent)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # define parameters
-#' y0 <- 20
-#' beta <- -0.5
-#' sigma0 <- 2
-#' delta <- -0.75
-#' x <- seq(1, 8, l = 101)
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' y <- rnorm(length(x), mu, sigma)
-#' w <- stats::runif(length(x), 0.8, 1.2)
-#' par <- c(y0, beta, sigma0, delta)
-#'
-#' # check loglikelihood
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' sum(w*stats::dnorm(y, mu, sigma, log = TRUE))
-#' powerlaw_normal_freebetadelta_loglikelihood(par, x, y, weights = w)
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 0)
-#' f1 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(eps, 0, 0, 0), x, y, weights = w, deriv = 0
-#' )
-#' f2 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(0, eps, 0, 0), x, y, weights = w, deriv = 0
-#' )
-#' f3 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(0, 0, eps, 0), x, y, weights = w, deriv = 0
-#' )
-#' f4 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(0, 0, 0, eps), x, y, weights = w, deriv = 0
-#' )
-#' (c(f1, f2, f3, f4) - f0)/eps
-#' powerlaw_normal_freebetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 1
-#' )
-#'
-#' # test second derivative
-#' f0 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 1
-#' )
-#' f1 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(eps, 0, 0, 0), x, y, weights = w, deriv = 1
-#' )
-#' f2 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(0, eps, 0, 0), x, y, weights = w, deriv = 1
-#' )
-#' f3 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(0, 0, eps, 0), x, y, weights = w, deriv = 1
-#' )
-#' f4 <- powerlaw_normal_freebetadelta_loglikelihood(
-#'   par + c(0, 0, 0, eps), x, y, weights = w, deriv = 1
-#' )
-#' (cbind(f1, f2, f3, f4) - f0)/eps
-#' powerlaw_normal_freebetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 2
-#' )
+#' @keywords internal
 #'
 powerlaw_normal_freebetadelta_loglikelihood <- function(
     par,
@@ -485,6 +374,7 @@ powerlaw_normal_freebetadelta_loglikelihood <- function(
 #' @inheritParams powerlaw_normal_freebetadelta_loglikelihood
 #' @param par vector with mean and standard deviation power-law exponents
 #' @return value of root functions to solve
+#' @keywords internal
 #'
 powerlaw_normal_freebetadelta_root <- function(
     par,
@@ -523,25 +413,7 @@ powerlaw_normal_freebetadelta_root <- function(
 #' @inheritParams powerlaw_normal_freebetadelta_root
 #' @return derivative of `powerlaw_normal_freebetadelta_root()` with respect to
 #'   elements in `par`
-#' @examples
-#' # parameters
-#' y0 <- 20
-#' beta <- -0.25
-#' sigma0 <- 2.5
-#' delta <- -0.5
-#' x <- seq(1, 8, l = 50001)
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' y <- abs(stats::rnorm(length(x), mu, sigma))
-#' w <- stats::runif(length(x), 0.9, 1.1)
-#' par <- c(beta, delta)
-#'
-#' eps <- 1e-6
-#' f0 <- powerlaw_normal_freebetadelta_root(par, x, y, weights = w)
-#' f1 <- powerlaw_normal_freebetadelta_root(par + c(eps, 0), x, y, weights = w)
-#' f2 <- powerlaw_normal_freebetadelta_root(par + c(0, eps), x, y, weights = w)
-#' (cbind(f1, f2) - f0)/eps
-#' powerlaw_normal_freebetadelta_root_jacobian(par, x, y, weights = w)
+#' @keywords internal
 #'
 powerlaw_normal_freebetadelta_root_jacobian <- function(
     par,
@@ -596,6 +468,7 @@ powerlaw_normal_freebetadelta_root_jacobian <- function(
 #' @inheritParams powerlaw_normal_fit
 #' @param delta known value for standard deviation power law exponent
 #' @return estimate for power-law exponents for the mean
+#' @keywords internal
 #'
 powerlaw_normal_freebeta_initialguess <- function(
     x,
@@ -625,61 +498,7 @@ powerlaw_normal_freebeta_initialguess <- function(
 #' @param delta known standard deviation power-law exponent
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # define parameters
-#' y0 <- 20
-#' beta <- -0.5
-#' sigma0 <- 2
-#' delta <- -0.75
-#' x <- seq(1, 8, l = 101)
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' y <- rnorm(length(x), mu, sigma)
-#' w <- stats::runif(length(x), 0.8, 1.2)
-#' par <- c(y0, beta, sigma0)
-#'
-#' # check loglikelihood
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' sum(w*stats::dnorm(y, mu, sigma, log = TRUE))
-#' powerlaw_normal_freebeta_loglikelihood(par, x, y, delta = delta, weights = w)
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par, x, y, delta = delta, weights = w, deriv = 0
-#' )
-#' f1 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par + c(eps, 0, 0), x, y, delta = delta, weights = w, deriv = 0
-#' )
-#' f2 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par + c(0, eps, 0), x, y, delta = delta, weights = w, deriv = 0
-#' )
-#' f3 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par + c(0, 0, eps), x, y, delta = delta, weights = w, deriv = 0
-#' )
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_normal_freebeta_loglikelihood(
-#'   par, x, y, delta = delta, weights = w, deriv = 1
-#' )
-#'
-#' # test second derivative
-#' f0 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par, x, y, delta = delta, weights = w, deriv = 1
-#' )
-#' f1 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par + c(eps, 0, 0), x, y, delta = delta, weights = w, deriv = 1
-#' )
-#' f2 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par + c(0, eps, 0), x, y, delta = delta, weights = w, deriv = 1
-#' )
-#' f3 <- powerlaw_normal_freebeta_loglikelihood(
-#'   par + c(0, 0, eps), x, y, delta = delta, weights = w, deriv = 1
-#' )
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_normal_freebeta_loglikelihood(
-#'   par, x, y, delta = delta, weights = w, deriv = 2
-#' )
+#' @keywords internal
 #'
 powerlaw_normal_freebeta_loglikelihood <- function(
     par,
@@ -751,6 +570,7 @@ powerlaw_normal_freebeta_loglikelihood <- function(
 #' @inheritParams powerlaw_normal_freebeta_loglikelihood
 #' @param beta value for mean power-law exponent
 #' @return value of root function to solve
+#' @keywords internal
 #'
 powerlaw_normal_freebeta_root <- function(
     beta,
@@ -782,6 +602,8 @@ powerlaw_normal_freebeta_root <- function(
 #' @inheritParams powerlaw_normal_freebeta_root
 #' @return derivative of `powerlaw_normal_freebeta_root()` with respect to
 #'   `beta`#'
+#' @keywords internal
+#'
 powerlaw_normal_freebeta_root_jacobian <- function(
     beta,
     x,
@@ -819,6 +641,7 @@ powerlaw_normal_freebeta_root_jacobian <- function(
 #' @inheritParams powerlaw_normal_fit
 #' @param beta known value for power law exponent
 #' @return estimate for power-law exponents for the standard deviation
+#' @keywords internal
 #'
 powerlaw_normal_freedelta_initialguess <- function(
     x,
@@ -848,61 +671,7 @@ powerlaw_normal_freedelta_initialguess <- function(
 #' @param beta known power-law exponent for the mean
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # define parameters
-#' y0 <- 20
-#' beta <- -0.5
-#' sigma0 <- 2
-#' delta <- -0.75
-#' x <- seq(1, 8, l = 101)
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' y <- rnorm(length(x), mu, sigma)
-#' w <- stats::runif(length(x), 0.8, 1.2)
-#' par <- c(y0, sigma0, delta)
-#'
-#' # check loglikelihood
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' sum(w*stats::dnorm(y, mu, sigma, log = TRUE))
-#' powerlaw_normal_freedelta_loglikelihood(par, x, y, beta = beta, weights = w)
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par, x, y, beta = beta, weights = w, deriv = 0
-#' )
-#' f1 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par + c(eps, 0, 0), x, y, beta = beta, weights = w, deriv = 0
-#' )
-#' f2 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par + c(0, eps, 0), x, y, beta = beta, weights = w, deriv = 0
-#' )
-#' f3 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par + c(0, 0, eps), x, y, beta = beta, weights = w, deriv = 0
-#' )
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_normal_freedelta_loglikelihood(
-#'   par, x, y, beta = beta, weights = w, deriv = 1
-#' )
-#'
-#' # test second derivative
-#' f0 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par, x, y, beta = beta, weights = w, deriv = 1
-#' )
-#' f1 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par + c(eps, 0, 0), x, y, beta = beta, weights = w, deriv = 1
-#' )
-#' f2 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par + c(0, eps, 0), x, y, beta = beta, weights = w, deriv = 1
-#' )
-#' f3 <- powerlaw_normal_freedelta_loglikelihood(
-#'   par + c(0, 0, eps), x, y, beta = beta, weights = w, deriv = 1
-#' )
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_normal_freedelta_loglikelihood(
-#'   par, x, y, beta = beta, weights = w, deriv = 2
-#' )
+#' @keywords internal
 #'
 powerlaw_normal_freedelta_loglikelihood <- function(
     par,
@@ -967,6 +736,7 @@ powerlaw_normal_freedelta_loglikelihood <- function(
 #' @inheritParams powerlaw_normal_freedelta_loglikelihood
 #' @param delta value for standard deviation power-law exponent
 #' @return value of root function to solve
+#' @keywords internal
 #'
 powerlaw_normal_freedelta_root <- function(
     delta,
@@ -1000,6 +770,8 @@ powerlaw_normal_freedelta_root <- function(
 #' @inheritParams powerlaw_normal_freedelta_root
 #' @return derivative of `powerlaw_normal_freedelta_root()` with respect to
 #'   `delta`#'
+#' @keywords internal
+#'
 powerlaw_normal_freedelta_root_jacobian <- function(
     delta,
     x,
@@ -1039,6 +811,7 @@ powerlaw_normal_freedelta_root_jacobian <- function(
 #'
 #' @inheritParams powerlaw_normal_fit
 #' @return estimate for power-law exponent for the mean
+#' @keywords internal
 #'
 powerlaw_normal_linkedbetadelta_initialguess <- function(
     x,
@@ -1066,61 +839,7 @@ powerlaw_normal_linkedbetadelta_initialguess <- function(
 #'   exponent, standard deviation power-law multiplier)
 #' @param deriv order of partial derivative requested
 #' @return loglikelihood, or its partial derivatives to order `deriv`
-#' @examples
-#' # define parameters
-#' y0 <- 20
-#' beta <- -0.5
-#' sigma0 <- 2
-#' delta <- beta
-#' x <- seq(1, 8, l = 101)
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' y <- rnorm(length(x), mu, sigma)
-#' w <- stats::runif(length(x), 0.8, 1.2)
-#' par <- c(y0, beta, sigma0)
-#'
-#' # check loglikelihood
-#' mu <- y0*x^beta
-#' sigma <- sigma0*x^delta
-#' sum(w*stats::dnorm(y, mu, sigma, log = TRUE))
-#' powerlaw_normal_linkedbetadelta_loglikelihood(par, x, y, weights = w)
-#'
-#' # test first derivative
-#' eps <- 1e-6
-#' f0 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 0
-#' )
-#' f1 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par + c(eps, 0, 0), x, y, weights = w, deriv = 0
-#' )
-#' f2 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par + c(0, eps, 0), x, y, weights = w, deriv = 0
-#' )
-#' f3 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par + c(0, 0, eps), x, y, weights = w, deriv = 0
-#' )
-#' (c(f1, f2, f3) - f0)/eps
-#' powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 1
-#' )
-#'
-#' # test second derivative
-#' f0 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 1
-#' )
-#' f1 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par + c(eps, 0, 0), x, y, weights = w, deriv = 1
-#' )
-#' f2 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par + c(0, eps, 0), x, y, weights = w, deriv = 1
-#' )
-#' f3 <- powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par + c(0, 0, eps), x, y, weights = w, deriv = 1
-#' )
-#' (cbind(f1, f2, f3) - f0)/eps
-#' powerlaw_normal_linkedbetadelta_loglikelihood(
-#'   par, x, y, weights = w, deriv = 2
-#' )
+#' @keywords internal
 #'
 powerlaw_normal_linkedbetadelta_loglikelihood <- function(
     par,
@@ -1195,6 +914,7 @@ powerlaw_normal_linkedbetadelta_loglikelihood <- function(
 #' @inheritParams powerlaw_normal_linkedbetadelta_loglikelihood
 #' @param beta value for mean power-law exponent
 #' @return value of root function to solve
+#' @keywords internal
 #'
 powerlaw_normal_linkedbetadelta_root <- function(
     beta,
@@ -1231,7 +951,9 @@ powerlaw_normal_linkedbetadelta_root <- function(
 #'
 #' @inheritParams powerlaw_normal_linkedbetadelta_root
 #' @return derivative of `powerlaw_normal_linkedbetadelta_root()` with respect to
-#'   `beta`#'
+#'   `beta`
+#' @keywords internal
+#'
 powerlaw_normal_linkedbetadelta_root_jacobian <- function(
     beta,
     x,
@@ -1267,66 +989,4 @@ powerlaw_normal_linkedbetadelta_root_jacobian <- function(
   d2logL_dbeta2 + 2*d2logL_dbetaddelta + d2logL_ddelta2
 }
 
-
-#' Calculate Kolmogorov-Smirnov parameters for power-law fit + normal
-#'
-#' @description
-#' Calculate Kolmogorov-Smirnov parameter for power-law fit with normally
-#' distributed residuals
-#'
-#' @md
-#' @inheritParams powerlaw_normal_fit
-#' @param multiplier,exponent multiplier and exponent for power-law fit
-#'   describing the mean
-#' @param sd_multiplier,sd_exponent multiplier and exponent for power-law fit
-#'   describing the standard deviation of residuals
-#' @return list with fields
-#'   * `ks_distance`: Kolmogorov-Smirnov distance
-#' @examples
-#' x <- seq(1, 7, l = 251)
-#' y <- stats::rnorm(length(x), 2, 0.5)
-#' powerlaw_normal_ks(x, y, 2, 0, 0.5)
-#'
-powerlaw_normal_ks <- function(
-    x,
-    y,
-    multiplier,
-    exponent,
-    sd_multiplier,
-    sd_exponent = 0
-) {
-  # normalise
-  yn <- sort((y - multiplier*x^exponent)/(sd_multiplier*x^sd_exponent))
-  # prediction
-  C2 <- rep(stats::pnorm(yn, 0, 1), each = 2)
-  # real cumulative
-  nx <- length(x)
-  C1 <- rep(seq(0, 1, l = nx + 1), each = 2)[2:(2*nx + 1)]
-  # distance
-  distances <- C2 - C1
-  i_max <- which.max(distances)
-  # experimental cumulative trace
-  df_exp <- data.frame(
-    x = rep(yn, each = 2),
-    y = C1
-  )
-  # fitted cumulative trace
-  xp <- seq(min(yn, na.rm = TRUE), max(yn, na.rm = TRUE), l = n)
-  df_fit <- data.frame(
-    x = xp,
-    y = stats::pnorm(xp, 0, 1)
-  )
-  # line for max
-  df_con <- data.frame(
-    x = rep(yn[floor((i_max + 1)/2)], 2),
-    y = c(C1[i_max], C2[i_max])
-  )
-  # return list (in case of future expansion)
-  list(
-    ks_distance = distances[i_max],
-    experimental = df_exp,
-    fit = df_fit,
-    difference = df_con
-  )
-}
 
