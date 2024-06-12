@@ -7,7 +7,7 @@ v0.1.0 - June 2024 - Gerrit Meijer (<gjm36@bath.ac.uk>)
 
 ## Running the app online
 
-An online app, showcasing the capabilities of the DRAM, is currently hosted through Shinyapps.io: <https://gjmeijer.shinyapps.io/rootmech/>
+An online app that can be used to fit user-defined data is currently hosted through Shinyapps.io: <https://gjmeijer.shinyapps.io/rootmech/>
 
 
 ## Package and installation
@@ -34,7 +34,7 @@ Instructions for how to use the app can be found within the app itself. The app 
 
 ## Using calculations functions
 
-A wrapper function `powerlaw_fit()` is provided that can generate power law fits for any of the methods described in Meijer (2024). For more information about this function and its input and output arguments, type `?powerlaw_fit()` (or `rootmech::powerlaw_fit()` if the `rootmech` packages is not currently loaded) into your R console window.
+A wrapper function `powerlaw_fit()` is provided that can generate power law fits for any of the methods described in Meijer (2024). For more information about this function and its input and output arguments, type `?powerlaw_fit()` (or `?rootmech::powerlaw_fit()` if the `rootmech` packages is not currently loaded) into your R console.
 
 
 ## Detailed function documentation
@@ -48,7 +48,7 @@ this package can be requested by typing `library(help = "rootmech")` into the R 
 
 Key functions are accompagnied by vignettes which include the mathematical 
 derivation behind each of the fitting methods. Type `browseVignettes("rootmech")` 
-in the console to obtain a list with all vignettes and browse their contents (documentation in HTML). Type `RShowDoc("name", package = "rootmech")' to open a specific vignette with the name `"name"` directly. Vignette names correspond with function names.
+in the console to obtain a list with all vignettes and browse their contents (documentation in HTML). Type `RShowDoc("name", package = "rootmech")` to open a specific vignette with the name `"name"` directly. Vignette names correspond with function names.
 
 ## Copyright and Licence
 
