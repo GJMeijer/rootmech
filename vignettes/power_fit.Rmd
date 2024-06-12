@@ -1,0 +1,89 @@
+---
+title: "power_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{power_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Problem definitions
+
+We want to fit a series of $x$ data using a power law probability distribution:
+
+$$
+p = \begin{cases}
+  \frac{1}{x \log\left(\frac{x_{max}}{x_{min}} \right)} & \text{when } \beta = -1\\
+  \frac{(\beta + 1) x^\beta}{x_{max}^{\beta + 1} - x_{min}^{\beta + 1}} & \text{else}
+\end{cases}
+$$
+
+This distribution is valid on the domain $x_{min} \leq x \leq x_{max}$. Outside this domain, $p = 0$. 
+
+We can determine the best fitting parameters $x_{min}$, $x_{max}$ and $\beta$ by maximising the likelihood function $\mathcal{L}$:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+This can be written as:
+
+$$
+\log\mathcal{L} = \begin{cases}
+  -\sum w \log x - \log\left[\log\left(\frac{x_{max}}{x_{min}}\right)\right] \sum w  & \text{when } \beta = -1\\
+  \log(\beta + 1) \sum w + \beta \sum w \log x  - \log\left( x_{max}^{\beta + 1} - x_{min}^{\beta + 1} \right) \sum w & \text{else}
+\end{cases}
+$$
+
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w \log x
+$$
+
+The loglikelihood can be written as:
+
+$$
+\log\mathcal{L} = \begin{cases}
+  -c_2 - c_1 \log\left[\log\left(\frac{x_{max}}{x_{min}}\right)\right]  & \text{when } \beta = -1\\
+  \beta c_2 + c_1 \log(\beta + 1) - c_1 \log\left( x_{max}^{\beta + 1} - x_{min}^{\beta + 1} \right)  & \text{else}
+\end{cases}
+$$
+
+# Loglikelihood solving
+
+$x_{min}$ and $x_{max}$ always maximise the likelihood when corresponding to the minimum and maximum values in all values for $x$. 
+
+The remaining fitting parameter $\beta$ can be found by solving the root of the partial derivative with respect to $\beta$:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial\beta} = 
+0 = 
+\begin{cases}
+c_2 + \frac{c_1}{2} \log\left(\frac{d_{r,max}}{d_{r,min}}\right) & \text{when } \beta = -1 \\
+c_2 + \frac{c_1}{\beta + 1} - 
+c_1 \left(\frac{x_{max}^{\beta + 1} \log x_{max} - x_{min}^{\beta + 1} \log x_{min}}{x_{max}^{\beta + 1} - x_{min}^{\beta + 1}}\right) &\text{else}
+\end{cases}
+$$
+
+This can be solved to obtain final unknown $\beta$.

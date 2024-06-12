@@ -1,8 +1,8 @@
 ---
-title: "power_logistic_fit"
+title: "powerlaw_logistic_fit"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{power_logistic_fit}
+  %\VignetteIndexEntry{powerlaw_logistic_fit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

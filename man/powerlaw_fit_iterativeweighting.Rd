@@ -108,7 +108,7 @@ shape <- 4
 x <- seq(1, 10, l = 51)
 y <- y0*x^beta*stats::rweibull(length(x), shape, 1/gamma(1 + 1/shape))
 y[x <= 3] <- 10*y[x <= 3]
-weights <- x^4
+weights <- x^2
 
 model <- "logistic"
 ft1 <- powerlaw_fit_iterativeweighting(x, y, model, weights = weights)

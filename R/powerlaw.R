@@ -122,12 +122,11 @@ powerlaw_fit <- function(
     )
   } else if (tolower(model) %in% ("lognormal_uncorrected")) {
     # Log-normal distribution - no correction for mean
-    ft <- powerlaw_lognormal_fit(
+    ft <- powerlaw_lognormal_uncorrected_fit(
       x,
       y,
       weights = weights
     )
-    ft$multiplier <- ft$multiplier/exp(0.5*ft$sdlog^2)
   } else if (tolower(model) %in% c("normal_strength", "normal")) {
     # Normal distribution - homoscedatic residuals in terms of strength
     ft <- powerlaw_normal_fit(
@@ -333,6 +332,10 @@ powerlaw_predictioninterval <- function(
     f <- stats::qlnorm(cum, -0.5*sdlog^2, sdlog)
     ymin <- y*f[1]
     ymax <- y*f[2]
+  } else if (tolower(model) %in% c("lognormal_uncorrected")) {
+    f <- stats::qlnorm(cum, 0, sdlog)
+    ymin <- y*f[1]
+    ymax <- y*f[2]
   } else if (tolower(model) == "gamma") {
     # Gamma distribution - scale parameter scales with mean
     ymin <- stats::qgamma(cum[1], shape = shape, scale = 1/shape*multiplier*x^exponent)
@@ -398,6 +401,26 @@ powerlaw_predictioninterval <- function(
 #'   shape = ft$shape
 #' )
 #'
+#' ft <- powerlaw_fit(x, y, "lognormal")
+#' powerlaw_covariancematrix(
+#'   x, y,
+#'   "lognormal",
+#'   method = "fisher",
+#'   multiplier = ft$multiplier,
+#'   exponent = ft$exponent,
+#'   sdlog = ft$sdlog
+#' )
+#'
+#' ft <- powerlaw_fit(x, y, "lognormal_uncorrected")
+#' powerlaw_covariancematrix(
+#'   x, y,
+#'   "lognormal_uncorrected",
+#'   method = "fisher",
+#'   multiplier = ft$multiplier,
+#'   exponent = ft$exponent,
+#'   sdlog = ft$sdlog
+#' )
+#'
 powerlaw_covariancematrix <- function(
     x,
     y,
@@ -423,7 +446,7 @@ powerlaw_covariancematrix <- function(
     fields <- c("multiplier", "exponent", "shape")
   } else if (tolower(model) %in% c("gumbel", "logistic")) {
     fields <- c("multiplier", "exponent", "scale")
-  } else if (tolower(model) %in% c("lognormal", "log-normal")) {
+  } else if (tolower(model) %in% c("lognormal", "lognormal_corrected", "lognormal_uncorrected")) {
     fields <- c("multiplier", "exponent", "sdlog")
   } else if (tolower(model) %in% c("normal_strength", "normal", "normal_force", "normal_scaled")) {
     fields <- c("multiplier", "exponent", "sd_multiplier")
@@ -458,9 +481,16 @@ powerlaw_covariancematrix <- function(
         x, y, weights = weights,
         deriv = 2
       )
-    } else if (tolower(model) %in% c("lognormal", "log-normal")) {
+    } else if (tolower(model) %in% c("lognormal")) {
       # Log-normal distribution - heteroscedatic log-strength residuals
       J2 <- powerlaw_lognormal_loglikelihood(
+        c(multiplier, exponent, sdlog),
+        x, y, weights = weights,
+        deriv = 2
+      )
+    } else if (tolower(model) %in% c("lognormal_uncorrected")) {
+      # log-normal distribution (without means-correction)
+      J2 <- powerlaw_lognormal_uncorrected_loglikelihood(
         c(multiplier, exponent, sdlog),
         x, y, weights = weights,
         deriv = 2
@@ -746,7 +776,7 @@ powerlaw_ks <- function(
     C2 <- rep(stats::plogis(yn, location = 0, scale = 1), each = 2)
     xp <- seq(min(yn, na.rm = TRUE), max(yn, na.rm = TRUE), l = n)
     yp <- stats::plogis(xp, location = 0, scale = 1)
-  } else if (model %in% c("lognormal", "log-normal")) {
+  } else if (model %in% c("lognormal", "lognormal_corrected")) {
     # lognormal ####
     yn <- y/(multiplier*x^exponent)
     or <- order(yn)
@@ -754,6 +784,14 @@ powerlaw_ks <- function(
     C2 <- rep(stats::plnorm(yn, -0.5*sdlog^2, sdlog), each = 2)
     xp <- seq(min(yn, na.rm = TRUE), max(yn, na.rm = TRUE), l = n)
     yp <- stats::plnorm(xp, -0.5*sdlog^2, sdlog)
+  } else if (model %in% c("lognormal_uncorrected")) {
+    # lognormal (uncorrected) ####
+    yn <- y/(multiplier*x^exponent)
+    or <- order(yn)
+    yn <- yn[or]
+    C2 <- rep(stats::plnorm(yn, 0, sdlog), each = 2)
+    xp <- seq(min(yn, na.rm = TRUE), max(yn, na.rm = TRUE), l = n)
+    yp <- stats::plnorm(xp, 0, sdlog)
   } else if (model %in% c("normal", "normal_strength", "normal_force", "normal_scaled", "normal_sdpower")) {
     # normal ####
     if (model %in% c("normal", "normal_strength")) {
@@ -854,7 +892,7 @@ powerlaw_ks <- function(
 #' x <- seq(1, 10, l = 51)
 #' y <- y0*x^beta*stats::rweibull(length(x), shape, 1/gamma(1 + 1/shape))
 #' y[x <= 3] <- 10*y[x <= 3]
-#' weights <- x^4
+#' weights <- x^2
 #'
 #' model <- "logistic"
 #' ft1 <- powerlaw_fit_iterativeweighting(x, y, model, weights = weights)

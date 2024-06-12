@@ -1,8 +1,8 @@
 ---
-title: "power_gamma_fit"
+title: "powerlaw_gamma_fit"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{power_gamma_fit}
+  %\VignetteIndexEntry{powerlaw_gamma_fit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

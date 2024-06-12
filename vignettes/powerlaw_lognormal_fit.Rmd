@@ -1,8 +1,8 @@
 ---
-title: "power_lognormal_fit"
+title: "powerlaw_lognormal_fit"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{power_lognormal_fit}
+  %\VignetteIndexEntry{powerlaw_lognormal_fit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

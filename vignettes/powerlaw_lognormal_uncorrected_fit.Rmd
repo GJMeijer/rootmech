@@ -1,0 +1,213 @@
+---
+title: "powerlaw_lognormal_uncorrected_fit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{powerlaw_lognormal_uncorrected_fit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the log-mean of $y$ at each value of $x$: $$ \bar{y} = y_0 x^\beta $$. The residuals are described using a log-normal distribution.
+
+We write the log-mean $\mu_L$ at each value of $x$ as follows:
+
+$$
+\exp \mu_L = y_0 x^\beta
+$$
+
+Solving this for $\mu_L$ gives:
+
+$$
+\mu_L = \log y_0 + \beta \log x 
+$$
+
+where $\mu_L$ and $\sigma_L$ are the log-mean and log-standard deviation of the log-normal distribution.
+
+The probability $p$ following the log-normal distribution:
+
+$$ 
+p = \frac{1}{y \sigma_L \sqrt{2 \pi}} 
+\exp \left[- \frac{(\log y - \mu_L)^2 }{2 \sigma_L^2} \right]
+$$
+
+which, with the above expressions, can be rewritten as:
+
+$$
+p = \frac{1}{y \sigma_L \sqrt{2 \pi}} 
+\exp\left[ -\frac{\left(\log y - \log y_0 - \beta \log x \right)^2}{2 \sigma_L^2} \right]
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$ and $\sigma_L$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Writing this out fully:
+
+$$
+\log\mathcal{L} = \sum w \left[
+ -\log y - \log \sigma_L - \frac{1}{2}\log(2\pi) - 
+\frac{\left(\log y - \log y_0 - \beta \log x \right)^2}{2 \sigma_L^2}
+\right]
+$$
+
+# Coefficients
+
+Define the following coefficients to make writing equations easier:
+
+$$
+c_1 = \sum w
+$$
+
+$$
+c_2 = \sum w \log x
+$$
+
+$$ 
+c_3 = \sum w \log y 
+$$
+
+$$ 
+c_4 = \sum w \log^2 x 
+$$
+
+$$ 
+c_5 = \sum w \log x \log y 
+$$
+
+$$ 
+c_6 = \sum w \log^2 y 
+$$
+
+The partial derivative of $\sigma_L$:
+
+$$
+\log\mathcal{L} = 
+-c_1 \left[\log \sigma_L + \frac{1}{2} \log(2\pi) + \frac{\log^2 y_0}{2\sigma_L^2} \right] - c_3 -
+\frac{ c_6 - 2 \beta c_5 + \beta^2 c_4 + 2 \log y_0 \left( \beta c_2 - c_3\right) }{2\sigma_L^2} 
+$$
+
+
+# Loglikelihood solving
+
+The maximum loglikelihood can be found where the partial derivatives of $\log\mathcal{L}$ with respect to $y_0$, $\beta$ and $\sigma_L$ are zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{c_3 - \beta c_2 - c_1 \log y_0}{y_0 \sigma_L^2} 
+= 0
+$$
+
+Solving this for $y_0$ gives:
+
+$$
+\log y_0 = \frac{c_3 - \beta c_2}{c_1}
+$$
+
+Substituting this result back into the equation for $\log\mathcal{L}$:
+
+$$
+\log\mathcal{L} = 
+-c_1 \left[ \log\sigma_L + \frac{1}{2}\sigma_L^2 \right] - 
+c_3 - 
+\frac{1}{2 \sigma_L^2} \left[ c_6 - 2 \beta c_5 + \beta^2 c_4 - \frac{(c_3 - \beta c_2)^2}{c_1} \right]
+$$
+
+Now taking the partial derivative with respect to $\beta$, which must be equal to zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{1}{\sigma_L^2} \left[ c_5 - \beta c_4 - \frac{c_2 (c_3 - \beta c_2)}{c_1} \right]
+= 0
+$$
+
+Solving this for $\beta$ gives:
+
+$$
+\beta = \frac{c_3}{c_2} - \frac{c_1 c_5}{c_2^2}
+$$
+
+The partial derivative with respect to $\sigma_L$ must be zero:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \sigma_L} = 
+c_1 \left[\frac{\log^2 y_0}{\sigma_L^3} - \frac{1}{\sigma_L}\right] + 
+\frac{c_6 - 2 \beta c_5 + \beta^2 c_4 + 2 \log y_0 (\beta c_2 - c_3)}{\sigma_L^3}
+$$
+
+Solving this for $\sigma_L^2$ gives:
+
+$$
+\sigma_L^2 = \log^2 y_0 + \frac{c_6 - 2 \beta c_5 + \beta^2 c_4 - 2 \log y_0 (c_3 - \beta c_2)}{c_1}
+$$
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial y_0} = 
+\frac{c_3 - \beta c_2 - c_1 \log y_0}{y_0 \sigma_L^2} 
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \beta} = 
+\frac{-(\beta c_4 - c_5 + c_2 \log y_0)}{\sigma_L^2}
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \sigma_L} = 
+c_1 \left[\frac{\log^2 y_0}{\sigma_L^3} - \frac{1}{\sigma_L}\right] + 
+\frac{c_6 - 2 \beta c_5 + \beta^2 c_4 + 2 \log y_0 (\beta c_2 - c_3)}{\sigma_L^3}
+$$
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0^2} = 
+\frac{c_1(1 + \log y_0) - c_3 + \beta c_2}{y_0^2 \sigma_L^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial\beta} = 
+-\frac{c_2}{y_0 \sigma_L^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial y_0 \partial\sigma_L} = 
+\frac{-2(c_3 - \beta c_2 - c_1 \log y_0)}{y_0 \sigma_L^3} 
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta^2} = 
+\frac{-c_4}{\sigma_L^2}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \beta \partial\sigma_L} = 
+\frac{2(\beta c_4 - c_5 + c_2 \log y_0)}{\sigma_L^3}
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\sigma_L^2} = 
+c_1 \left[\frac{3 \log^2 y_0}{\sigma_L^4} - \frac{1}{\sigma_L^2}\right] - 
+\frac{3 \left[ c_6 - 2 \beta c_5 + \beta^2 c_4 + 2 \log y_0 (\beta c_2 - c_3)\right]}{\sigma_L^4}
+$$

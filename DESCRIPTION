@@ -12,7 +12,7 @@ Authors@R:
              role = c("cph")))
 Description: Functions for power law fitting of root diameter versus root 
   biomechanical properties such as tensile strength.
-License: file LICENSE
+License: MIT + file LICENSE
 Language: en-GB
 Encoding: UTF-8
 LazyData: true

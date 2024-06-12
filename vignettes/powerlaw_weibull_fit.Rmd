@@ -1,8 +1,8 @@
 ---
-title: "power_weibull_fit"
+title: "powerlaw_weibull_fit"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{power_weibull_fit}
+  %\VignetteIndexEntry{powerlaw_weibull_fit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

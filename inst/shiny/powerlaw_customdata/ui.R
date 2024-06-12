@@ -84,7 +84,7 @@ ui <- shiny::navbarPage(
     shiny::column(
       4,
       "Application developed as part of publication",
-      tags$a(href = "test", "Improving power law fitting"),
+      tags$a(href = "test", "Improving power law fitting of root tensile strength–diameter relationships"),
       ". ",
       "Please consider citing this source when using this tool"
     )

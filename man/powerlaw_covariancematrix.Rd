@@ -80,4 +80,24 @@ powerlaw_covariancematrix(
   shape = ft$shape
 )
 
+ft <- powerlaw_fit(x, y, "lognormal")
+powerlaw_covariancematrix(
+  x, y,
+  "lognormal",
+  method = "fisher",
+  multiplier = ft$multiplier,
+  exponent = ft$exponent,
+  sdlog = ft$sdlog
+)
+
+ft <- powerlaw_fit(x, y, "lognormal_uncorrected")
+powerlaw_covariancematrix(
+  x, y,
+  "lognormal_uncorrected",
+  method = "fisher",
+  multiplier = ft$multiplier,
+  exponent = ft$exponent,
+  sdlog = ft$sdlog
+)
+
 }
