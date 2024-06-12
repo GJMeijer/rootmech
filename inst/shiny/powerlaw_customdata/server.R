@@ -313,4 +313,83 @@ server <- function(input, output, session) {
       )
     )
   })
+
+  # GENERATE FIT RESULTS LABELS ####
+  # KS distance
+  output$label_ks <- renderText(paste0(
+    "Kolmogorov-Smirnov distance, KS = ",
+    numeric2character(ft()$ks_distance, digits = digits)
+  ))
+  # Loglikelihood
+  output$label_loglikelihood <- renderText(paste0(
+    "Loglikelihood = ",
+    numeric2character(ft()$loglikelihood, digits = digits)
+  ))
+  # power law multiplier
+  output$label_multiplier <- renderUI(shiny::HTML(paste0(
+    "Power law multiplier, t<sub>r,u,0</sub> = ",
+    numeric2character(ft()$multiplier, digits = digits),
+    " MPa"
+  )))
+  # power law exponent
+  output$label_exponent <- renderUI(shiny::HTML(paste0(
+    "Power law exponent, &#946;<sub>t</sub> = ",
+    numeric2character(ft()$exponent, digits = digits)
+  )))
+  # variation parameter 1
+  output$label_intradiameter1 <- renderUI({
+    if (fittype() == "gumbel") {
+      shiny::HTML(paste0(
+        "Scale parameter, &#952;<sub>0</sub> = ",
+        numeric2character(ft()$scale, digits = digits),
+        " MPa"
+      ))
+    } else if (fittype() == "gamma") {
+      shiny::HTML(paste0(
+        "Shape parameter, k<sub>t</sub> = ",
+        numeric2character(ft()$shape, digits = digits)
+      ))
+    } else if (fittype() == "logistic") {
+      shiny::HTML(paste0(
+        "Scale parameter, s<sub>0</sub> = ",
+        numeric2character(ft()$scale, digits = digits),
+        " MPa"
+      ))
+    } else if (fittype() %in% c("lognormal", "lognormal_uncorrected")) {
+      shiny::HTML(paste0(
+        "Log-standard deviation, &#963;<sub>L</sub> = ",
+        numeric2character(ft()$sdlog, digits = digits)
+      ))
+    } else if (fittype() %in% c("normal_strength", "normal_force", "normal_scaled")) {
+      shiny::HTML(paste0(
+        "Standard deviation power law multiplier, &#963;<sub>0</sub> = ",
+        numeric2character(ft()$sd_multiplier, digits = digits),
+        " MPa"
+      ))
+    } else if (fittype() == "uniform") {
+      shiny::HTML(paste0(
+        "Width parameter, w<sub>t</sub> = ",
+        numeric2character(ft()$width, digits = digits),
+        " MPa"
+      ))
+    } else if (fittype() == "weibull") {
+      shiny::HTML(paste0(
+        "Shape parameter, &#954;<sub>t</sub> = ",
+        numeric2character(ft()$shape, digits = digits)
+      ))
+    } else {
+      shiny::HTML(NULL)
+    }
+  })
+  # variation paramter 2
+  output$label_intradiameter2 <- renderUI({
+    if (fittype() %in% c("normal_strength", "normal_force", "normal_scaled")) {
+      shiny::HTML(paste0(
+        "Standard deviation power law exponent, &#946;<sub>t</sub> = ",
+        numeric2character(ft()$sd_exponent, digits = digits)
+      ))
+    } else {
+      shiny::HTML(NULL)
+    }
+  })
 }

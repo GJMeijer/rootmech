@@ -3,10 +3,6 @@
 ## SETTINGS ####
 # settings
 digits <- 4  # number of significant digits to use for fit parameters displayed
-# names
-user_data_name <- "<User data - copy-paste into table below>"
-# default custom data
-custom_default <- data.frame(dr = as.double(rep(NA, 3)), tru = as.double(rep(NA, 3)))
 
 ## DATA ####
 # root data - use Zea Mays data from Meijer et al. 2024

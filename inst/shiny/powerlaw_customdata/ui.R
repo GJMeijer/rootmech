@@ -15,7 +15,7 @@ ui <- shiny::navbarPage(
           "fittype",
           "Power law fit model",
           choices = df_fittype$name,
-          selected = df_fittype$name[df_fittype$label == "weibull"],
+          selected = df_fittype$name[df_fittype$label == "gamma"],
           multiple = FALSE,
           selectize = FALSE
         ),
@@ -50,8 +50,15 @@ ui <- shiny::navbarPage(
         rhandsontable::rHandsontableOutput("table")
       ),
       shiny::mainPanel(
+        # render results
+        shiny::uiOutput("label_multiplier"),
+        shiny::uiOutput("label_exponent"),
+        shiny::uiOutput("label_intradiameter1"),
+        shiny::uiOutput("label_intradiameter2"),
+        shiny::textOutput("label_loglikelihood"),
+        shiny::textOutput("label_ks"),
         # results table
-        shiny::tableOutput("table_results"),
+         # shiny::tableOutput("table_results"),
         # plot power law
         plotly::plotlyOutput("plot_fit"),
         # plot KS
