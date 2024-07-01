@@ -85,14 +85,20 @@ $$
 
 $$ 
 c_3 = \sum w x^\kappa 
+\qquad
+\frac{\partial c_3}{\partial \kappa} = c_4
 $$
 
 $$ 
 c_4 = \sum w x^\kappa \log x 
+\qquad
+\frac{\partial c_4}{\partial \kappa} = c_5
 $$
 
 $$ 
 c_5 = \sum w x^\kappa \log^2 x 
+\qquad
+\frac{\partial c_5}{\partial \kappa} = c_6
 $$
 
 $$ 
@@ -142,3 +148,37 @@ $$
 where $n$ is the number of observations, and $i = 1..n$ the index.
 
 The linearised survival function can now be fitted using standard linear regression techniques in order to obtain an initial guess for Weibull shape parameter $\kappa$.
+
+# Loglikelihood derivatives
+
+The partial derivatives of the loglikelihood function can be used to estimate the covariance matrix of the fitting parameters.
+
+The first-order partial derivatives are:
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \kappa} = 
+\frac{c_1}{\kappa} - c_1 \log\lambda + c_2 + \lambda^{-\kappa}\left( c_3 \log\lambda - c_4 \right)
+$$
+
+$$
+\frac{\partial\log\mathcal{L}}{\partial \lambda} = 
+c_3 \kappa \lambda^{-\kappa - 1} - \frac{c_1 \kappa}{\lambda}
+$$
+
+The second-order partial derivatives:
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \kappa^2} =
+\frac{-c_1}{\kappa^2} - \lambda^{-\kappa} \left(c_5 - 2c_4 \log\lambda - c_3 \log^2\lambda \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial\kappa \partial\lambda} =
+\frac{-c_1}{\lambda} + \lambda^{-\kappa - 1} \left( c_3 - c_3 \kappa \log\lambda + \kappa c_4 \right)
+$$
+
+$$
+\frac{\partial^2\log\mathcal{L}}{\partial \lambda^2} = 
+
+\frac{c_1 \kappa}{\lambda^2} - c_3 \kappa \left(\kappa + 1\right) \lambda^{-\kappa - 2}
+$$

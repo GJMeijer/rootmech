@@ -101,6 +101,51 @@ weibull_initialguess <- function(x, weights = rep(1, length(x))) {
 }
 
 
+#' Loglikelihood of Weibull fit
+#'
+#' @description
+#' Returns weighted loglikelihood function of Weibull fit or its
+#' derivatives
+#'
+#' @inheritParams weibull_fit
+#' @param par vector with Weibull shape and scale parameters
+#' @return loglikelihood
+#' @keywords internal
+#'
+weibull_loglikelihood <- function(
+    par,
+    x,
+    weights = rep(1, length(x)),
+    deriv = 0
+) {
+  # split parameters
+  shape <- par[1]
+  scale <- par[2]
+  # coefficients
+  c1 <- sum(weights)
+  c2 <- sum(weights*log(x))
+  c3 <- sum(weights*x^shape)
+  c4 <- sum(weights*x^shape*log(x))
+  c5 <- sum(weights*x^shape*log(x)^2)
+  # derivatives
+  if (deriv == 0){
+    c1*log(shape) - c1*shape*log(scale) + c2*(shape - 1) - c3*scale^(-shape)
+  } else if (deriv == 1) {
+    dlogL_dshape <- c1/shape - c1*log(scale) + c2 + scale^(-shape)*(c3*log(scale) - c4)
+    dlogL_dscale <- -c1*shape/scale + c3*shape*scale^(-shape - 1)
+    c(dlogL_dshape, dlogL_dscale)
+  } else if (deriv == 2) {
+    d2logL_dshape2 <- -c1/shape^2 - scale^(-shape)*(c5 - 2*c4*log(scale) + c3*log(scale)^2)
+    d2logL_dshapedscale <- -c1/scale + scale^(-shape - 1)*(c3 - c3*shape*log(scale) + shape*c4)
+    d2logL_dscale2 <- c1*shape/scale^2 - c3*shape*(shape + 1)*scale^(-shape - 2)
+    matrix(
+      c(d2logL_dshape2, d2logL_dshapedscale, d2logL_dshapedscale, d2logL_dscale2),
+      nrow = 2
+    )
+  }
+}
+
+
 #' Root to solve for Weibull fitting
 #'
 #' @description
