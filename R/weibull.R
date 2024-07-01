@@ -188,3 +188,25 @@ weibull_root_jacobian <- function(shape, x, weights = rep(1, length(x))) {
   -c1/shape^2 - c1*c5/c3 + c1*c4^2/c3^2
 }
 
+
+#' Hessian of root to solve for Weibull fitting
+#'
+#' @description
+#' Jacobian of root equation to solve for Weibull fitting.
+#'
+#' @inheritParams weibull_root
+#' @return second derivative of function `weibull_root()` with respect to input
+#'   argument `shape`
+#' @keywords internal
+#'
+weibull_root_hessian <- function(shape, x, weights = rep(1, length(x))) {
+  # coefficients
+  c1 <- sum(weights)
+  c2 <- sum(weights*log(x))
+  c3 <- sum(weights*x^shape)
+  c4 <- sum(weights*x^shape*log(x))
+  c5 <- sum(weights*x^shape*log(x)^2)
+  c6 <- sum(weights*x^shape*log(x)^3)
+  # return derivative of root
+  2*c1/shape^3 - c1*c6/c3 + 3*c1*c4*c5/c3^2 - 2*c1*c4^3/c3^3
+}

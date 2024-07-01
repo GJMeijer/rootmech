@@ -12,6 +12,14 @@ J_num <- (v1 - v0)/eps
 J_ana <- weibull_root_jacobian(shape, x, weights = w)
 testthat::expect_equal(J_num, J_ana, tolerance = 0.001)
 
+# check hessian of weibull root solving ####
+eps <- 1e-6
+v0 <- weibull_root_jacobian(shape, x, weights = w)
+v1 <- weibull_root_jacobian(shape + eps, x, weights = w)
+J_num <- (v1 - v0)/eps
+J_ana <- weibull_root_hessian(shape, x, weights = w)
+testthat::expect_equal(J_num, J_ana, tolerance = 0.001)
+
 # test loglikelihood
 L0 <- weibull_loglikelihood(c(shape, scale), x, weights = w)
 L1 <- sum(w*stats::dweibull(x, shape, scale, log = TRUE))

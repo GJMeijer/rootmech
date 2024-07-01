@@ -22,7 +22,7 @@ $$
 \mu + \gamma \theta = y_0 x^\beta
 $$
 
-Where $\mu$ and $\theta$ are the location and scale parameter describing the Gumbell probability distribution, and $\gamma$ the Euler-Mascheroni constant:
+Where $\mu$ and $\theta$ are the location and scale parameter describing the Gumbel probability distribution, and $\gamma$ the Euler-Mascheroni constant:
 
 $$
 \gamma 
