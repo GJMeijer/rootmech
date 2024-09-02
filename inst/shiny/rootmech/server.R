@@ -182,11 +182,11 @@ server <- function(input, output, session) {
       plt,
       xaxis = list(
         title = "Root diameter [mm]",
-        range = round_range(1.05*df_use()$dr, lim = c(0, NA))$lim
+        range = rootmech::round_range(1.05*df_use()$dr, lim = c(0, NA))$lim
       ),
       yaxis = list(
         title = "Tensile strength [MPa]",
-        range = round_range(1.05*df_use()$tru, lim = c(0, NA))$lim
+        range = rootmech::round_range(1.05*df_use()$tru, lim = c(0, NA))$lim
       ),
       legend = list(
         title = list(
@@ -327,7 +327,7 @@ server <- function(input, output, session) {
   ))
   # power law multiplier
   output$label_multiplier <- shiny::renderUI(shiny::HTML(paste0(
-    "Power law multiplier, t<sub>r,u,0</sub> = ",
+    "Power law multiplier, t<sub>0</sub> = ",
     rootmech::numeric2character(ft()$multiplier, digits = digits),
     " MPa"
   )))
@@ -346,7 +346,7 @@ server <- function(input, output, session) {
       ))
     } else if (fittype() == "gamma") {
       shiny::HTML(paste0(
-        "Shape parameter, k<sub>t</sub> = ",
+        "Shape parameter, k = ",
         rootmech::numeric2character(ft()$shape, digits = digits)
       ))
     } else if (fittype() == "logistic") {
@@ -368,13 +368,13 @@ server <- function(input, output, session) {
       ))
     } else if (fittype() == "uniform") {
       shiny::HTML(paste0(
-        "Width parameter, w<sub>t</sub> = ",
+        "Width parameter, c = ",
         rootmech::numeric2character(ft()$width, digits = digits),
         " MPa"
       ))
     } else if (fittype() == "weibull") {
       shiny::HTML(paste0(
-        "Shape parameter, &#954;<sub>t</sub> = ",
+        "Shape parameter, &#954; = ",
         rootmech::numeric2character(ft()$shape, digits = digits)
       ))
     } else {
@@ -385,11 +385,115 @@ server <- function(input, output, session) {
   output$label_intradiameter2 <- shiny::renderUI({
     if (fittype() %in% c("normal_strength", "normal_force", "normal_scaled")) {
       shiny::HTML(paste0(
-        "Standard deviation power law exponent, &#946;<sub>t</sub> = ",
+        "Standard deviation power law exponent, &#946;<sub>&#963;</sub> = ",
         rootmech::numeric2character(ft()$sd_exponent, digits = digits)
       ))
     } else {
       shiny::HTML(NULL)
     }
   })
+
+
+  # POWER LAW - SELECTION ####
+  # model selection
+  fittype2 <- shiny::reactive({
+    df_fittype$label[df_fittype$name == input$fittype2]
+  })
+  # update families
+  shiny::observeEvent(input$species_group, {
+    updateSelectInput(
+      session,
+      "species_family",
+      choices = fit_opts$family[fit_opts$functional_group2 %in% input$species_group],
+      selected = fit_opts$family[fit_opts$functional_group2 %in% input$species_group]
+    )
+  })
+  # update species
+  shiny::observeEvent(input$species_family, {
+    updateSelectInput(
+      session,
+      "species_species",
+      choices = fit_opts$species[
+        (fit_opts$family %in% input$species_family) &
+        (fit_opts$functional_group2 %in% input$species_group)
+        ],
+      selected = fit_opts$species[
+        (fit_opts$family %in% input$species_family) &
+        (fit_opts$functional_group2 %in% input$species_group)
+        ]
+    )
+  })
+  # fit data
+  fit_data <- shiny::reactive({
+    df_fits[(df_fits$species %in% input$species_species) & (df_fits$model == fittype2()), ]
+  })
+  # generate curves - log-log
+  curves <- shiny::reactive({
+    df <- tidyr::expand_grid(fit_data(), s = seq(0, 1, l = 101))
+    df$x <- df$`diameter_min [mm]` + df$s*(df$`diameter_max [mm]` - df$`diameter_min [mm]`)
+    df$y <- df$`t_ru0 [MPa]`*df$x^(df$beta_t)
+    df
+  })
+  # generate plot
+  plt_powerlaw <- reactive({
+    plt <- plotly::plot_ly()
+    plt <- plotly::add_trace(
+      plt,
+      type = "scatter",
+      mode = "lines",
+      data = curves(),
+      x = ~x,
+      y = ~y,
+      name = ~label,
+      hovertemplate = " "
+    )
+  })
+  output$plot_powerlaw <- plotly::renderPlotly({
+    if (input$logplot == TRUE) {
+      plotly::layout(
+        plt_powerlaw(),
+        xaxis = list(
+          type = "log",
+          title = "Root diameter [mm]"
+        ),
+        yaxis = list(
+          type = "log",
+          title = "Tensile strength [MPa]"
+        ),
+        showlegend = FALSE
+      )
+    } else {
+      plotly::layout(
+        plt_powerlaw(),
+        xaxis = list(
+          title = "Root diameter [mm]",
+          range = rootmech::round_range(1.05*curves()$x, lim = c(0, NA))$lim
+        ),
+        yaxis = list(
+          title = "Tensile strength [MPa]",
+          range = rootmech::round_range(1.05*curves()$y, lim = c(0, NA))$lim
+        ),
+        showlegend = FALSE
+      )
+    }
+  })
+  # generate table with data
+  data_table <- reactive({
+      dd <- fit_data()
+      cn <- colnames(dd)
+      cn[cn == "diameter_min [mm]"] <- "d_min [mm]"
+      cn[cn == "diameter_max [mm]"] <- "d_max [mm]"
+      cn[cn == "t_ru0 [MPa]"] <- "t_0 [MPa]"
+      colnames(dd) <- cn
+      dd[, c("species", "t_0 [MPa]", "beta_t", "d_min [mm]", "d_max [mm]", "reference", "notes")]
+  })
+  output$table_powerlaw <- DT::renderDT({  #shiny::renderTable
+    DT::formatRound(
+      DT::datatable(data_table(), rownames = FALSE, options = list(
+        paging = TRUE, pageLength = 1000)),
+      columns = c("t_0 [MPa]", "beta_t", "d_min [mm]", "d_max [mm]"),
+      digits = 3
+    )
+  })
+
 }

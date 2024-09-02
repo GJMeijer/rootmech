@@ -10,7 +10,7 @@
 #' \dontrun{run_app()}
 #' @export
 #'
-run_app <- function(app_name = "powerlaw_customdata", package_name = "rootmech") {
+run_app <- function(app_name = "rootmech", package_name = "rootmech") {
   # locate all the shiny app examples that exist
   validExamples <- list.files(
     system.file("shiny", package = package_name)

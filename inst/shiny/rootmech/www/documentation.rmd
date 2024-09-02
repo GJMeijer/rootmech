@@ -1,7 +1,12 @@
 ---
 author: "G. J. Meijer"
 date: "04/01/2024"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+
 ---
 
 
@@ -10,7 +15,7 @@ output: html_document
 This application generates power law fits between root diameter and root tensile strength data, as discussed in the following paper:
 
 > G.J. Meijer. 2024. "Improving power law fitting of root tensile strength–diameter
-relationships". Ecological Engineering x(x):xx-xx. DOI:xxx
+relationships". Plant and Soil. DOI:xxx
 
 This interactive application is intended to make the process of obtaining the best power law fit easy. Add you data to the table, and  explore the difference between various fitting methods and the effect of weighting.
 
@@ -19,7 +24,11 @@ Please cite the above publication when using the model or its source code. For a
 
 ## How to use
 
-Under the "Analysis" tab, first add your data to the editable table in the left-hand column. You can simply copy-paste from a spreadsheet, or add values manually. Right-clicking opens a contextual menu allowing to add or remove rows to the table.
+### "Fit custom data" tab
+
+This tab can be used to generate power law fits on custom data.
+
+First add your data to the editable table in the left-hand column. You can simply copy-paste from a spreadsheet, or add values manually. Right-clicking opens a contextual menu allowing to add or remove rows to the table.
 
 The sliders and menus above the data table determine fit settings:
 
@@ -28,91 +37,107 @@ The sliders and menus above the data table determine fit settings:
 
   $$ w = \frac{n d_r^{\beta_w}}{\sum d_r^{\beta_w}} $$
   
-  where $n$ is the number of root measurements, and $d_r$ the root diameter. Note that changing $\beta_w$ using this slider overrides any user-defined weighting data in the data table.
+  where $d_r$ is the root diameter. Note that changing $\beta_w$ using this slider overrides any user-defined weighting data in the data table.
 * **Confidence level of fit [%]**: The confidence level of the fit. This can be seen as the level of certainty the best power law fit lies within a certain band around the bit fit (see pink band in the power law plot). 
 * **Prediction interval level [%]**: The prediction level of the fit. This can be seen as the level of certainty any new measurements will be within a certain band around the best fit the best power law fit, based on known measurements (see green band in plot).
 
-The right-hand side of the app shows all results
+The right-hand side of the app shows all results:
 
 * A table with the values of fitting parameters
 * A plot showing all data, fitted power law, and the confidence and prediction intervals
-* A plot showing the Kolmogoroc-Smirnov distance
+* A plot showing the Kolmogorov-Smirnov distance
 
 
-## Power law curve
+### "Fit results" tab
 
-The average tensile strength ($t_{r,u}$) of all roots with similar diameters diameter ($d_r$) is assumed to vary with the root diameter according to a power law:
+This tab can be used to obtain the fitted power laws for all species and fitting methods investigated in Meijer (2024). 
 
-$$ \bar{t}_{r,u} = t_{r,u,0} \left(\frac{d_r}{d_{r,0}}\right)^{\beta_t} $$
+On the left-hand side, select:
 
-where $\beta_t$ is the power coefficient, and $t_{r,u,0}$ the power law multiplier, i.e. the tensile strength of a root with a diameter equal to the reference diameter $d_{r,0}$. It is assumed that $d_{r,0}=1$ mm. 
+* The power law fit model.
+* Select one or more plant species. Species are grouped per plant group (broadleaves, conifers, forbs, grasses and shrubs) and plan family (Cupressacaea, Pinaceae, etc.). Multiple groups/families/species can be selected simultaneously.
+
+The right-hand side will show a plot of all selected power law fits. These can be plotted on linear or logarithmic scales, depending on the plot setttings displayed on the left-hand side. Fits are only plotted for the observed diameter range, i.e. the thinnest ("d_min") to thickest root ("d_max") observed in each dataset.
+
+A table with all selected fitting results is shown underneath the plot, containing numeric values of the fitting parameters (e.g. power law multiplier "t_0" and power law exponent "beta_t").
 
 
-## Fitting methods
+## Theory
 
-Nine different fitting techniques can be employed. Each has three indepedent fitting parameter (two to describe the power law, and one to describe the intra-diameter variation):
+### Power law curves
 
-* **Gamma**: the ratio between measured and predicted strength (i.e. $t_{r,u}/\bar{t}_{r,u}$) is assumed to be gamma distributed with a mean of 1. The gamma curve is defined by shape parameter $k_t$ and scale parameter $\theta$. The latter follows from the assumption that the mean strength is known, so:
+The average tensile strength ($t$) of all roots with similar diameters diameter ($d$) is assumed to vary with the root diameter according to a power law:
 
-  $$ \theta = \frac{\bar{t}_{r,u}}{k_t} $$ 
+$$ \bar{t} = t_0 \left(\frac{d}{d_0}\right)^{\beta_t} $$
+
+where $\beta_t$ is the power coefficient, and $t_0$ the power law multiplier, i.e. the tensile strength of a root with a diameter equal to the reference diameter $d_{0}$. It is assumed that $d_{0}=1$ mm. 
+
+
+### Fitting methods
+
+Nine different fitting techniques can be employed. Each has three independent fitting parameter (two to describe the power law, and one to describe the intra-diameter variation):
+
+* **Gamma**: the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is assumed to be gamma distributed with a mean of 1. The gamma curve is defined by shape parameter $k$ and scale parameter $\theta$. The latter follows from the assumption that the mean strength is known, so:
+
+  $$ \theta = \frac{\bar{t}}{k} $$ 
   
-* **Gumbel**: the ratio between measured and predicted strength (i.e. $t_{r,u}/\bar{t}_{r,u}$) is assumed to be Gumbel distributed with a mean of 1. The gamma curve is defined by location parameter $\mu$ and scale parameter $\theta$. These follows from the assumption that the mean strength is known, so:
+* **Gumbel**: the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is assumed to be Gumbel distributed with a mean of 1. The gamma curve is defined by location parameter $\mu$ and scale parameter $\theta$. These follows from the assumption that the mean strength is known, so:
 
-  $$ \theta = \theta_0 \left(\frac{d_r}{d_{r,0}}\right)^{\beta_t} $$
+  $$ \theta = \theta_0 \left(\frac{d}{d_{0}}\right)^{\beta_t} $$
   
-  $$ \mu = \bar{t}_{r,u} - \gamma \theta $$ 
+  $$ \mu = \bar{t} - \gamma \theta $$ 
   
   where $\gamma$ is the Euler-Mascheroni constant.
-* **Logistic**: the ratio between measured and predicted strength (i.e. $t_{r,u}/\bar{t}_{r,u}$) is assumed to be logistic distributed with a mean of 1. The logistic curve is defined by location parameter $\mu$ and scale parameter $s$. These follows from the assumption that the mean strength is known, so:
+* **Logistic**: the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is assumed to be logistic distributed with a mean of 1. The logistic curve is defined by location parameter $\mu$ and scale parameter $s$. These follows from the assumption that the mean strength is known, so:
 
-  $$ \mu = \bar{t}_{r,u} $$
+  $$ \mu = \bar{t} $$
   
-  $$ s = s_0 \left(\frac{d_r}{d_{r,0}}\right)^{\beta_t} $$
+  $$ s = s_0 \left(\frac{d}{d_{0}}\right)^{\beta_t} $$
 
-* **Lognormal (uncorrected)**: Linear least-squares regression of log-transformed diameter and tensile strength data. This fitting method assumes that the ratio between measured and predicted strength (i.e. $t_{r,u}/\bar{t}_{r,u}$) is lognormally distributed. This means $\log t_{r,u} - \log \bar{t}{r,u}$ is assumed normally distributed, with a mean $\mu_L = 0$ and a standard deviation $\sigma_L$.  
+* **Lognormal (uncorrected)**: Linear least-squares regression of log-transformed diameter and tensile strength data. This fitting method assumes that the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is lognormally distributed. This means $\log t - \log \bar{t}$ is assumed normally distributed, with a mean $\mu_L = 0$ and a standard deviation $\sigma_L$.  
 
-  The log-transformed power law multiplier $\log t_{r,u,0}$ and the power coefficient $\beta_t$ are found as the intercept and gradient of the best linear fit in log-log space. $\sigma_L$ is the standard deviation of the log-normal distribution. As described by Meijer (2024), this results in an underestimation of predicted tensile strength.
-* **Lognormal (corrected)**: As above, but the power law multiplier $t_{r,u,0}$ is adjusted so that it accurately describes the mean of the lognormal distribution, thus accounting for the fact that the mean of a series of log-transformed data is not equal to the log-transformed mean of this data. Without this correction, the root strength power law is always underestimated, see Meijer (2024) for more details.
-* **Normal (strength)**: Non-linear least-squares regression of tensile strength data. This is the most commonly used method. The residuals (i.e. $t_{r,u} - \bar{t}_{r,u}$) are assumed to the normally distributed with a mean of zero and a standard deviation $\sigma_{t}$ does not change with root diameter ($\beta_\sigma = 0$):
+  The log-transformed power law multiplier $\log t_0$ and the power coefficient $\beta_t$ are found as the intercept and gradient of the best linear fit in log-log space. $\sigma_L$ is the standard deviation of the log-normal distribution. As described by Meijer (2024), this results in an underestimation of predicted tensile strength.
+* **Lognormal (corrected)**: As above, but the power law multiplier $t_0$ is adjusted so that it accurately describes the mean of the lognormal distribution, thus accounting for the fact that the mean of a series of log-transformed data is not equal to the log-transformed mean of this data. Without this correction, the root strength power law is always underestimated, see Meijer (2024) for more details.
+* **Normal (strength)**: Non-linear least-squares regression of tensile strength data. This is the most commonly used method. The residuals (i.e. $t - \bar{t}$) are assumed to the normally distributed with a mean of zero and a standard deviation $\sigma_{t}$ does not change with root diameter ($\beta_\sigma = 0$):
 
-  $$ \sigma_t = \sigma_{t,0} = \sigma_{t,0} \left( \frac{d_r}{d_{r,0}}\right)^0$$
+  $$ \sigma = \sigma_{0} = \sigma_{0} \left( \frac{d}{d_0}\right)^0$$
   
-* **Normal (force)** Non-linear least-squares regression of root tensile forces at failure $T_{r,u}$. The corresponding power-law is given by:
+* **Normal (force)** Non-linear least-squares regression of root tensile forces at failure $T$. The corresponding power-law is given by:
 
-  $$ \bar{T}_{r,u} = T_{r,u,0} \left(\frac{d_r}{d_{r,0}}\right)^{\beta_T} $$
+  $$ \bar{T} = T_0 \left(\frac{d}{d_{0}}\right)^{\beta_T} $$
   
-  The root force $T_{r,u}$ can be calculated from the root cross-sectional area:
+  The root force $T$ can be calculated from the root cross-sectional area:
   
-  $$ T_{r,u} = \frac{\pi d_r^2}{4} t_{r,u} $$
+  $$ T = \frac{\pi d^2}{4} t $$
   
-  and thus fitting parameter $T_{r,u,0}$ and $\beta_T$ can be written in terms of the equivalent root tensile strength power law as:
+  and thus fitting parameter $T_{0}$ and $\beta_T$ can be written in terms of the equivalent root tensile strength power law as:
   
-  $$ t_{r,u,0} = \frac{4}{\pi} T_{r,u} \qquad \beta_t = \beta_T - 2 $$
+  $$ t_{0} = \frac{4}{\pi} T_0 \qquad \beta_t = \beta_T - 2 $$
   
-  This fitting method assumes that the residuals ($T_{r,u} - \bar{T}_{r,u}$) are normally distributed. This means that the corresponding standard deviation written in terms of tensile strength satisfies:
+  This fitting method assumes that the residuals ($T - \bar{T}$) are normally distributed. This means that the corresponding standard deviation written in terms of tensile strength satisfies:
   
-  $$ \sigma_t = \sigma_{t,0} \left(\frac{d_r}{d_{r,0}}\right)^{-2} $$
+  $$ \sigma = \sigma_{0} \left(\frac{d}{d_{0}}\right)^{-2} $$
   
   where $\beta_{\sigma} = -2$. The app shows all results in terms of tensile strength, rather than forces, in order to aid comparison between the different fitting methods.
-* **Normal (scaled)**: The fitting residuals ($\bar{t}_{r,u} - t_{r,u}$) are assumed normally distributed with a standard deviation that scales with the average strength, i.e. the standard deviation is described by:
+* **Normal (scaled)**: The fitting residuals ($\bar{t} - t$) are assumed normally distributed with a standard deviation that scales with the average strength, i.e. the standard deviation is described by:
 
-  $$ \sigma_t = \sigma_{t,0} \left(\frac{d_r}{d_{r,0}}\right)^{\beta_{t}} $$
+  $$ \sigma = \sigma_{0} \left(\frac{d}{d_{0}}\right)^{\beta_{t}} $$
 
-* **Uniform**: the ratio between measured and predicted strength (i.e. $t_{r,u}/\bar{t}_{r,u}$) is assumed to uniformly distributed. The upper and lower bounds of the distribution are described by:
+* **Uniform**: the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is assumed to uniformly distributed. The upper and lower bounds of the distribution are described by:
 
-  $$ \bar{t}_{r,u,min} = \left(t_{r,u,0} - \frac{1}{2} w_t \right) \left( \frac{d_r}{d_{r,0}}\right)^{\beta_t} $$
+  $$ a = \left(t_{0} - \frac{1}{2} c \right) \left( \frac{d}{d_{0}}\right)^{\beta_t} $$
 
-  $$ \bar{t}_{r,u,max} = \left(t_{r,u,0} + \frac{1}{2} w_t \right) \left( \frac{d_r}{d_{r,0}}\right)^{\beta_t} $$
+  $$ b = \left(t_{0} + \frac{1}{2} c \right) \left( \frac{d}{d_{0}}\right)^{\beta_t} $$
   
-  where $w_t$ is a width parameter.
+  where $c$ is a width parameter.
   
-* **Weibull**: the ratio between measured and predicted strength (i.e. $t_{r,u}/\bar{t}_{r,u}$) is assumed to be Weibull distributed with a mean of 1. The Weibull curve is defined by shape parameter $\kappa_t$ and scale parameter $\lambda_t$. The latter follows from the assumption that the mean strength is known, so:
+* **Weibull**: the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is assumed to be Weibull distributed with a mean of 1. The Weibull curve is defined by shape parameter $\kappa$ and scale parameter $\lambda_t$. The latter follows from the assumption that the mean strength is known, so:
 
-  $$ \lambda_t = \frac{\bar{t}_{r,u}}{\Gamma\left(1 + \frac{1}{\kappa_t}\right)} $$
+  $$ \lambda = \frac{\bar{t}}{\Gamma\left(1 + \frac{1}{\kappa}\right)} $$
 
 
 
-## Confidence interval
+### Confidence interval
 
 The confidence interval describes the range in which the best power law fit is located with a certain degree of certainty, usually chosen as 95%. Narrow confidence intervals indicate that the best fit is not strongly affected by variation in the data, and thus is a better fit. 
 
@@ -128,23 +153,23 @@ $$ \boldsymbol{\Sigma} \approx \boldsymbol{I}_n $$
 
 In the 'Uniform' fitting method, this approach cannot be used as the loglikelihood function is not continuous. Instead, bootstrapping is used (using 100 iterations only, to save time) to estimate the variance-covariance matrix \boldsymbol{\Sigma}$.
 
-The variance ($\sigma^2$) for each root diameter $d_r$ is subsequently estimated using the first-order Delta method:
+The variance ($\sigma^2$) for each root diameter $d$ is subsequently estimated using the first-order Delta method:
 
-$$ \sigma^2 \approx \frac{\partial\bar{t}_{r,u}}{\partial\boldsymbol{p}^T} \cdot \boldsymbol{\Sigma} \cdot \frac{\partial\bar{t}_{r,u}}{\partial\boldsymbol{p}} $$
+$$ \sigma^2 \approx \frac{\partial\bar{t}}{\partial\boldsymbol{p}^T} \cdot \boldsymbol{\Sigma} \cdot \frac{\partial\bar{t}}{\partial\boldsymbol{p}} $$
 
 Finally the confidence interval --- for each diameter --- was determined from the normal distribution, the user-defined confidence level and the calculated variance. for example, the 95% confidence interval is given by:
 
-$$ \bar{t}_{r,u,confidence,min} = \bar{t}_{r,u} - 1.957 \sqrt{\sigma^2} $$
-$$ \bar{t}_{r,u,confidence,max} = \bar{t}_{r,u} + 1.957 \sqrt{\sigma^2} $$
+$$ \bar{t}_{confidence,min} = \bar{t} - 1.957 \sqrt{\sigma^2} $$
+$$ \bar{t}_{confidence,max} = \bar{t} + 1.957 \sqrt{\sigma^2} $$
 
-## Prediction interval
+### Prediction interval
 
-The prediction interval gives the domain that should contain a specified fraction of all newly predicted values for tensile strengths based on the fitted power law fit and parameters describing the intra-diameter variation (e.g. $\kappa_t$, $\sigma_{t,0}$, $\sigma_L$ etcetera.). Fit types that have prediction intervals nicely enveloping all measured points can be seen as better fits as they better describe the intra-diameter variation.
+The prediction interval gives the domain that should contain a specified fraction of all newly predicted values for tensile strengths based on the fitted power law fit and parameters describing the intra-diameter variation (e.g. $\kappa$, $\sigma_{0}$, $\sigma_L$ etcetera.). Fit types that have prediction intervals nicely enveloping all measured points can be seen as better fits as they better describe the intra-diameter variation.
 
 The chosen level of the prediction interval can be set by the user using the sliders on the left. 
 
 For example, for the 95% prediction interval assuming normally distributed intra-diameter variation that is homoscedastic in terms of tensile strength, i.e. model "Normal (strength)", the prediction interval is given by:
 
-$$ \bar{t}_{r,u,prediction,min} = \bar{t}_{r,u} - 1.957 \sigma_t $$
-$$ \bar{t}_{r,u,prediction,max} = \bar{t}_{r,u} + 1.957 \sigma_t $$
+$$ \bar{t}_{prediction,min} = \bar{t} - 1.957 \sigma_t $$
+$$ \bar{t}_{prediction,max} = \bar{t} + 1.957 \sigma_t $$
 
