@@ -32,12 +32,18 @@
 #'   * `gumbel`: Gumbel distribution; mean = power law, scale parameter
 #'     scales with mean
 #' @param weights vector with weighting for each observation (default: 1)
-#' @param method solving method. Can be `newton` for gradient-descent (using
-#'   `rootSolve::multiroot()`), `bisection` for a bisection algorithm
-#'   (using `stats::uniroot()`) or `chull` for a method involving convex
-#'   hulls (using, `grDevices::chull()`, only available for
-#'   `model == "uniform"`)). Not all methods are available for each model,
-#'   see individual documentation for fitting functions for each model
+#' @param method solving method. Can be
+#'   * `newton` for gradient-descent (using
+#'   `rootSolve::multiroot()`)
+#'   * `bisection` for a bisection algorithm
+#'   (using `stats::uniroot()`)
+#'   * `chull` for a method involving convex
+#'   hulls (using, `grDevices::chull()`. This method is only available for
+#'   `model == "uniform"`.
+#'
+#'   Not all methods are available for each model,
+#'   see individual documentation for fitting functions for each model (e.g.
+#'   by typing `?powerlaw_fit_weibull` into the R console).
 #' @param range initial search range around best guess, when using a
 #'   bisection algorithm (`method == "bisection`). `range` is added to the
 #'   best guess to provide the bounds of the initial search window
