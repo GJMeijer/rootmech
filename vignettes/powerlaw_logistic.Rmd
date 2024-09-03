@@ -1,18 +1,12 @@
 ---
-title: "powerlaw_logistic_fit"
+title: "powerlaw_logistic"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{powerlaw_logistic_fit}
+  %\VignetteIndexEntry{powerlaw_logistic}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
 
 # Problem definitions

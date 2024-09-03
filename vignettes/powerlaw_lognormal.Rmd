@@ -1,18 +1,12 @@
 ---
-title: "powerlaw_lognormal_fit"
+title: "powerlaw_lognormal"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{powerlaw_lognormal_fit}
+  %\VignetteIndexEntry{powerlaw_lognormal}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
 
 # Problem definitions

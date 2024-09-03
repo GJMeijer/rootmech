@@ -1,18 +1,12 @@
 ---
-title: "gumbel_fit"
+title: "gumbel"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{gumbel_fit}
+  %\VignetteIndexEntry{gumbel}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
 
 # Problem definitions

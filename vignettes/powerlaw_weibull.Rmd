@@ -1,18 +1,11 @@
 ---
-title: "powerlaw_weibull_fit"
+title: "powerlaw_weibull"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{powerlaw_weibull_fit}
+  %\VignetteIndexEntry{powerlaw_weibull}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
 
 # Problem definitions

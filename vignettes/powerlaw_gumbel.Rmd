@@ -1,8 +1,8 @@
 ---
-title: "powerlaw_gumbel_fit"
+title: "powerlaw_gumbel"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{powerlaw_gumbel_fit}
+  %\VignetteIndexEntry{powerlaw_gumbel}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

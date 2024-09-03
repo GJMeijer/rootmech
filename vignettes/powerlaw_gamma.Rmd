@@ -1,18 +1,12 @@
 ---
-title: "powerlaw_gamma_fit"
+title: "powerlaw_gamma"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{powerlaw_gamma_fit}
+  %\VignetteIndexEntry{powerlaw_gamma}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
 # Problem definitions
 

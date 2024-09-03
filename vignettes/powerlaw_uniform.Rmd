@@ -1,0 +1,141 @@
+---
+title: "powerlaw_uniform"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{powerlaw_uniform}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Problem definitions
+
+We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
+
+$$
+\bar{y} = y_0 x^\beta
+$$
+
+Using the definition of the mean of the uniform distribution, at each value of $x$ the following must satisfied:
+
+$$
+c = \frac{a + b}{2} = y_0 x^\beta
+$$
+
+where $a$ and $b$ are the lower and upper limits of the uniform distribution, and $c$ the mean. Therefore, the upper and lower limits can be written as:
+
+$$
+a = \left(y_0 - \frac{1}{2} c\right) x^\beta
+$$
+$$
+b = \left(y_0 + \frac{1}{2} c\right) x^\beta
+$$
+
+
+The probability $p$ following the Weibull distribution:
+
+$$ 
+p = \begin{cases}
+  \frac{1}{b-a} 
+  & \text{when } a \leq y \leq b \\
+  0 
+  & \text{else}
+  \end{cases}
+$$
+
+Solve for the best fitting parameters $y_0$, $\beta$ and $c$ by maximising the likelihood:
+
+$$
+\mathcal{L} = \prod p^w
+$$
+
+where $w$ is the weighting of each observation. We can alternatively maximise the loglikelihood:
+
+$$
+\log\mathcal{L} = \sum w \log p
+$$
+
+Because $p=0$ for observations outside the uniform distribution range, $c$ must always be sufficient large to catch all observations between the lower and upper bounds of the uniform distribution. Otherwise, the likelihood $\mathcal{L}$ will automatically become zero.
+
+Writing out the expression for the loglikelihood fully:
+
+$$
+\log\mathcal{L} = 
+-\log c \sum w - \beta \sum w \log x
+$$
+
+
+# Solving
+
+Because of the discrete nature of the distribution, we can not employ root solving techniques (root solving the partial derivatives of the loglikelihood function) as employed for the other models in this package. 
+
+Instead, we can make use of the fact that
+* the bounds of the best fitting distribution will always touch some observations. This way, the uniform domain will the thinnest which will maximise the probability density.
+* none of the observations will lie outside the domain.
+
+Taking exponent $\beta$ as the fitting parameter, we can find the corresponding lower and upper bound by:
+
+$$ 
+a = \min \frac{y}{x^\beta}
+$$
+
+$$
+b = \max \frac{y}{x^\beta$}
+$$
+
+With the limits of the uniform distribution known, we can calculate the loglikelihood as defined above. In the following, two algorithms are defined:
+
+## Root solving method
+
+We want to find the unknown $\beta$ that maximises $\mathcal{L}$. This $\beta$ can by found by root solving of the derivative:
+
+$$
+\frac{\partial\mathcal{L}}{\partial\beta} = 0
+$$
+
+In other words, we want to solve:
+
+$$
+\frac{\partial\mathcal{L}}{\partial\beta} = \frac{\partial}{\partial\beta} 
+\left[ \log\left(b-a\right) \sum w - \beta \sum w \log x \right] 
+= 0
+$$
+
+Writing out the partial derivative:
+
+$$
+\frac{\partial\mathcal{L}}{\partial\beta} = 
+\frac{1}{b - a}
+\left( \frac{\partial b}{\partial\beta} - \frac{\partial a}{\partial\beta} \right)
+\sum w
+- \sum w \log x
+= 0
+$$
+
+where $a$ and $b$ are the lower and upper bound as obtained by finding the minimum and maximum of $y x^\{-\beta}$ across all obserations. The required partial derivatives of $a$ and $b$ with respect to $\beta$ are:
+
+$$
+\frac{\partial a}{\partial \beta} = -b \log x
+$$
+
+$$
+\frac{\partial a}{\partial \beta} = -a \log x
+$$
+
+where the value of $x$ corresponds to the $x$-value of observation from which  $a$ and $b$ are defined.
+
+The equation  $\partial\mathcal{L}/\partial\beta=0$ can now be solved to obtain the unknown $\beta$, for example with a bisection root finding algorithm. With the known value of $beta$, values $a$, $b$, $c$ and $y_0$ can be calculated with expressions above.
+
+
+## Convex hull method
+
+The above root finding approach may have to search over a large domain of values for $\beta$. An alternative solution algorithm, based on convex hulls, can be used instead. This makes use of the fact that power law fits become linear curves in $\log x$--$\log y$ space.
+
+In logarithmic space, we want to minimise the thickness of the uniform distribution band, i.e. minimize $\log c$. The smallest value of $c$ (and therefore of $\log c$) will return the largest likelihood. This value with correspond with the case where:
+* one of the bounds (upper or lower) will pass through at least two observations
+* the other bound will pass through at least one observation
+* all observations lie between the two bounds
+
+We can thus fit a convex hull through the $\log x$-$\log y$ data. The gradients of the vertices of the convex hull form a discrete set of potential options for the best-fitting value of $\beta$. We can now simply calculate the likelihood score corresponding to each of these vertices, and select the value of $\beta$ that maximised $\mathcal{L}$. With the known value of $beta$, values $a$, $b$, $c$ and $y_0$ can be calculated in the same way as when using a root finding technique as described above.
+
+This method is expected to be faster and more accurate compared to root finding, but requires an algorithm to generate convex hulls.

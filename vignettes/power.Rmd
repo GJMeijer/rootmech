@@ -1,18 +1,12 @@
 ---
-title: "power_fit"
+title: "power"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{power_fit}
+  %\VignetteIndexEntry{power}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
 # Problem definitions
 

@@ -1,18 +1,12 @@
 ---
-title: "weibull_fit"
+title: "weibull"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{weibull_fit}
+  %\VignetteIndexEntry{weibull}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
 
 # Problem definition
