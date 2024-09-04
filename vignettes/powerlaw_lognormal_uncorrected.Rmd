@@ -7,10 +7,16 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+Power law fitting with lognormally distributed residuals (no correction for mean)
 
-# Problem definitions
 
-We want to fit a series of $x$,$y$ data using a power law which describes the log-mean of $y$ at each value of $x$: $$ \bar{y} = y_0 x^\beta $$. The residuals are described using a log-normal distribution.
+# Problem definition
+
+We want to fit a series of $x$,$y$ data using a power law which describes the log-mean of $y$ at each value of $x$: 
+
+$$ \bar{y} = y_0 x^\beta $$
+
+The residuals are described using a log-normal distribution.
 
 We write the log-mean $\mu_L$ at each value of $x$ as follows:
 

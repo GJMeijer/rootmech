@@ -56,31 +56,20 @@ df_fittype <- data.frame(
 )
 
 # Load fit data
-if (FALSE) {
-  df_fits <- readr::read_csv("./www/20240509_results_bestfit.csv")
-  # merge species
-  df_spec <- readr::read_csv("./www/species.csv")
-  df_spec <- df_spec[, c("species", "common_name", "family")]
-  df_fits <- dplyr::left_join(df_fits, df_spec, by = "species")
-  readr::write_csv(df_fits, "./www/powerlawfits.csv")
-}
-df_fits <- readr::read_csv("./www/powerlawfits.csv")
+df_fits <- readr::read_csv(
+  "./www/powerlawfits.csv",
+  col_types = "iccccddddcddddddddccc"
+)
+# reorder fit data in species order
 df_fits <- df_fits[order(df_fits$species, df_fits$reference, df_fits$notes), ]
-# add lognormal (uncorrected data)
-if (FALSE) {
-  df_fits_add <- df_fits[df_fits$model == "lognormal", ]
-  df_fits_add$`t_ru0 [MPa]` <- df_fits_add$`t_ru0 [MPa]`/exp(0.5*df_fits_add$sdlog^2)
-  df_fits_add$model <- "lognormal_uncorrected"
-  df_fits <- dplyr::bind_rows(df_fits, df_fits_add)
-  df_fits$model[df_fits$model=="lognormal_corrected"] <- "lognormal"
-  readr::write_csv(df_fits, "bla.csv")
-}
-
+# create a single label for each dataset
 df_fits$label <- ifelse(
   is.na(df_fits$notes),
   paste0(df_fits$species, ", ", df_fits$reference),
   paste0(df_fits$species, ", ", df_fits$reference, ", ", df_fits$notes)
 )
+# generate list of unique species
 fit_opts <- unique(df_fits[, c("functional_group2", "family", "species")])
+# order unique list of plant species in order of group -> family -> species
 fit_opts <- fit_opts[order(fit_opts$functional_group2, fit_opts$family, fit_opts$species), ]
 

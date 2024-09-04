@@ -147,7 +147,7 @@ ui <- shiny::navbarPage(
     ),
     shiny::column(
       4,
-      "January 2024"
+      "September 2024"
     ),
     shiny::column(
       4,

@@ -25,7 +25,9 @@ parameter.}
 \item{method}{if \code{method == "chull"}, optional values for the power-law
 exponent are acquired from the vertices of a convex hull circumscribing
 the log-transformed x,y data. The value minimising the loglikelihood
-function is then used. If \verb{method == }uniroot\verb{, the best fitting value is found using bisection of first derivative of the loglikelihood function. }"chull"` is more accurate (no approximation) but may be slower
+function is then used. If \code{method == "bisection"}, the best fitting value
+is found using bisection of first derivative of the loglikelihood
+function. \code{"chull"} is more accurate (no approximation) but may be slower
 for large datasets.}
 
 \item{start}{initial guess for power-log exponent. If not defined, an

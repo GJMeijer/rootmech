@@ -7,9 +7,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+Power law fitting with normally distributed residuals
 
 
-# Problem definitions
+# Problem definition
 
 We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
 

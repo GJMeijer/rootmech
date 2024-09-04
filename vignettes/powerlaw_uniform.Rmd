@@ -7,8 +7,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+Power law fitting with uniformly distributed residuals
 
-# Problem definitions
+
+# Problem definition
 
 We want to fit a series of $x$,$y$ data using a power law which describes the mean of $y$ at each value of $x$:
 
@@ -76,11 +78,11 @@ Instead, we can make use of the fact that
 Taking exponent $\beta$ as the fitting parameter, we can find the corresponding lower and upper bound by:
 
 $$ 
-a = \min \frac{y}{x^\beta}
+a = \min \left( \frac{y}{x^\beta} \right)
 $$
 
 $$
-b = \max \frac{y}{x^\beta$}
+b = \max \left( \frac{y}{x^\beta} \right)
 $$
 
 With the limits of the uniform distribution known, we can calculate the loglikelihood as defined above. In the following, two algorithms are defined:
@@ -112,7 +114,7 @@ $$
 = 0
 $$
 
-where $a$ and $b$ are the lower and upper bound as obtained by finding the minimum and maximum of $y x^\{-\beta}$ across all obserations. The required partial derivatives of $a$ and $b$ with respect to $\beta$ are:
+where $a$ and $b$ are the lower and upper bound as obtained by finding the minimum and maximum of $y x^{-\beta}$ across all obserations. The required partial derivatives of $a$ and $b$ with respect to $\beta$ are:
 
 $$
 \frac{\partial a}{\partial \beta} = -b \log x
@@ -132,10 +134,11 @@ The equation  $\partial\mathcal{L}/\partial\beta=0$ can now be solved to obtain 
 The above root finding approach may have to search over a large domain of values for $\beta$. An alternative solution algorithm, based on convex hulls, can be used instead. This makes use of the fact that power law fits become linear curves in $\log x$--$\log y$ space.
 
 In logarithmic space, we want to minimise the thickness of the uniform distribution band, i.e. minimize $\log c$. The smallest value of $c$ (and therefore of $\log c$) will return the largest likelihood. This value with correspond with the case where:
+
 * one of the bounds (upper or lower) will pass through at least two observations
 * the other bound will pass through at least one observation
 * all observations lie between the two bounds
 
-We can thus fit a convex hull through the $\log x$-$\log y$ data. The gradients of the vertices of the convex hull form a discrete set of potential options for the best-fitting value of $\beta$. We can now simply calculate the likelihood score corresponding to each of these vertices, and select the value of $\beta$ that maximised $\mathcal{L}$. With the known value of $beta$, values $a$, $b$, $c$ and $y_0$ can be calculated in the same way as when using a root finding technique as described above.
+We can thus fit a convex hull through the $\log x$-$\log y$ data. The gradients of the vertices of the convex hull form a discrete set of potential options for the best-fitting value of $\beta$. We can now simply calculate the likelihood score corresponding to each of these vertices, and select the value of $\beta$ that maximised $\mathcal{L}$. With the known value of $\beta$, values $a$, $b$, $c$ and $y_0$ can be calculated in the same way as when using a root finding technique as described above.
 
 This method is expected to be faster and more accurate compared to root finding, but requires an algorithm to generate convex hulls.

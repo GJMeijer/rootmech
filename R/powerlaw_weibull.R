@@ -23,7 +23,7 @@
 #' beta <- -0.5
 #' kappa <- 10
 #' lambda <- 1/gamma(1 + 1/kappa)
-#' x <- seq(1, 8, l = 100001)
+#' x <- seq(1, 8, l = 101)
 #' y <- y0*x^beta*rweibull(length(x), kappa, lambda)
 #' weights <- runif(length(x), 0.8, 1.2)
 #'

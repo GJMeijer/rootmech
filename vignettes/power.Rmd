@@ -7,8 +7,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+Power law propobility distribution fitting.
 
-# Problem definitions
+
+# Problem definition
 
 We want to fit a series of $x$ data using a power law probability distribution:
 

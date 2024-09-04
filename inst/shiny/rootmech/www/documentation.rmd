@@ -75,7 +75,9 @@ where $\beta_t$ is the power coefficient, and $t_0$ the power law multiplier, i.
 
 ### Fitting methods
 
-Nine different fitting techniques can be employed. Each has three independent fitting parameter (two to describe the power law, and one to describe the intra-diameter variation):
+Nine different fitting techniques can be employed. Each has three independent fitting parameter (two to describe the power law, and one to describe the intra-diameter variation)
+
+More information on these fitting methods can be found in the Meijer (2024) paper. Detailed mathematical derivations and solution algorithms are described in the vignettes of the `rootmech` R package, see  <https://github.com/GJMeijer/rootmech/>.
 
 * **Gamma**: the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is assumed to be gamma distributed with a mean of 1. The gamma curve is defined by shape parameter $k$ and scale parameter $\theta$. The latter follows from the assumption that the mean strength is known, so:
 
@@ -134,7 +136,6 @@ Nine different fitting techniques can be employed. Each has three independent fi
 * **Weibull**: the ratio between measured and predicted strength (i.e. $t/\bar{t}$) is assumed to be Weibull distributed with a mean of 1. The Weibull curve is defined by shape parameter $\kappa$ and scale parameter $\lambda_t$. The latter follows from the assumption that the mean strength is known, so:
 
   $$ \lambda = \frac{\bar{t}}{\Gamma\left(1 + \frac{1}{\kappa}\right)} $$
-
 
 
 ### Confidence interval

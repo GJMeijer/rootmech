@@ -52,9 +52,10 @@ this package can be requested by typing `library(help = "rootmech")` into the R 
 
 Key functions are accompanied by vignettes. These include the mathematical 
 derivations behind each of the fitting methods and algorithms. Execute `browseVignettes("rootmech")` 
-to obtain a list with all vignettes and browse their contents (documentation in HTML). Execture `RShowDoc("name", package = "rootmech")` to open a specific vignette with the a specific name (`name`)  directly. 
+to obtain a list with all vignettes and browse their contents (documentation in HTML). Exectute `RShowDoc("name", package = "rootmech")` to open a specific vignette with the a specific name (`name`)  directly. 
 
-Available vignettes describing power law fitting are :
+Available vignettes describing power law fitting are:
+
 * `powerlaw_gamma`: power law fitting with gamma distribution
 * `powerlaw_gumbel`: power law fitting with Gumbel distribution
 * `powerlaw_logistic`: power law fitting with logistic distribution
@@ -64,7 +65,8 @@ Available vignettes describing power law fitting are :
 * `powerlaw_uniform`: power law fitting with uniform distribution
 * `powerlaw_weibull` power law fitting with Weibull distribution
 
-Further vignettes are available:
+Further vignettes are available for fitting specific probability distributions:
+
 * `gumbel`: Fitting a Gumbel probability distribution 
 * `power`: Fitting a power law probability distribution
 * `weibull`: Fitting a Weibull probability distribution

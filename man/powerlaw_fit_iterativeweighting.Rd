@@ -50,12 +50,20 @@ scales with mean
 
 \item{weights}{vector with weighting for each observation (default: 1)}
 
-\item{method}{solving method. Can be \code{newton} for gradient-descent (using
-\code{rootSolve::multiroot()}), \code{bisection} for a bisection algorithm
-(using \code{stats::uniroot()}) or \code{chull} for a method involving convex
-hulls (using, \code{grDevices::chull()}, only available for
-\code{model == "uniform"})). Not all methods are available for each model,
-see individual documentation for fitting functions for each model}
+\item{method}{solving method. Can be
+\itemize{
+\item \code{newton} for gradient-descent (using
+\code{rootSolve::multiroot()})
+\item \code{bisection} for a bisection algorithm
+(using \code{stats::uniroot()})
+\item \code{chull} for a method involving convex
+hulls (using, \code{grDevices::chull()}. This method is only available for
+\code{model == "uniform"}.
+}
+
+Not all methods are available for each model,
+see individual documentation for fitting functions for each model (e.g.
+by typing \code{?powerlaw_fit_weibull} into the R console).}
 
 \item{range}{initial search range around best guess, when using a
 bisection algorithm (\verb{method == "bisection}). \code{range} is added to the
@@ -108,7 +116,7 @@ shape <- 4
 x <- seq(1, 10, l = 51)
 y <- y0*x^beta*stats::rweibull(length(x), shape, 1/gamma(1 + 1/shape))
 y[x <= 3] <- 10*y[x <= 3]
-weights <- x^2
+weights <- x^1.1
 
 model <- "logistic"
 ft1 <- powerlaw_fit_iterativeweighting(x, y, model, weights = weights)
