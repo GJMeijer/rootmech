@@ -1,0 +1,12 @@
+name: rootmech
+title: rootmech
+username: gjmeijer
+account: gjmeijer
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12613560
+bundleId: 9064817
+url: https://gjmeijer.shinyapps.io/rootmech/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
