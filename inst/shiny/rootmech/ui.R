@@ -85,7 +85,7 @@ ui <- shiny::navbarPage(
         shiny::selectInput(
           "species_group",
           "Plant group",
-          choices = unique(fit_opts$functional_group2),
+          choices = unique(fit_opts$functional_group),
           selected = "Conifers",
           multiple = TRUE,
           selectize = TRUE

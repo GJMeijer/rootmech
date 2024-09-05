@@ -17,11 +17,13 @@ Language: en-GB
 Encoding: UTF-8
 LazyData: true
 Imports:
+    rootSolve,
+    grDevices,
     shiny,
     plotly,
-    rootSolve,
     rhandsontable,
-    grDevices
+    tidyr,
+    DT
 RoxygenNote: 7.2.3
 Suggests: 
     rmarkdown,

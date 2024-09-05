@@ -56,9 +56,17 @@ df_fittype <- data.frame(
 )
 
 # Load fit data
-df_fits <- readr::read_csv(
-  "./www/powerlawfits.csv",
-  col_types = "iccccddddcddddddddccc"
+#df_fits <- readr::read_csv(
+#  "./www/powerlawfits.csv",
+#  col_types = "iccccddddcddddddddccc"
+#)
+df_fits <- read.csv("./www/powerlawfits.csv")
+df_fits$html <- paste0(
+  '<a href="',
+  df_fits$link,
+  '">',
+  df_fits$reference,
+  "</a>"
 )
 # reorder fit data in species order
 df_fits <- df_fits[order(df_fits$species, df_fits$reference, df_fits$notes), ]
@@ -69,7 +77,26 @@ df_fits$label <- ifelse(
   paste0(df_fits$species, ", ", df_fits$reference, ", ", df_fits$notes)
 )
 # generate list of unique species
-fit_opts <- unique(df_fits[, c("functional_group2", "family", "species")])
+fit_opts <- unique(df_fits[, c("functional_group", "family", "species")])
 # order unique list of plant species in order of group -> family -> species
-fit_opts <- fit_opts[order(fit_opts$functional_group2, fit_opts$family, fit_opts$species), ]
+fit_opts <- fit_opts[order(fit_opts$functional_group, fit_opts$family, fit_opts$species), ]
 
+
+
+
+# add sources to fit results
+if (FALSE) {
+  ds <- read_csv("./inst/shiny/rootmech/www/sources.csv") %>%
+    mutate(link = ifelse(
+      is.na(doi),
+      url,
+      paste0("https://www.doi.org/", doi)
+    )) %>%
+    select(source_id, link, digitised)
+  dd <- read_csv("./inst/shiny/rootmech/www/datasets.csv") %>%
+    left_join(ds, by = "source_id") %>%
+    select(dataset_id, link, digitised)
+  df <- read_csv("./inst/shiny/rootmech/www/powerlawfits.csv") %>%
+    left_join(dd, by = "dataset_id")
+  write_csv(df, "./inst/shiny/rootmech/www/powerlawfits2.csv")
+}
