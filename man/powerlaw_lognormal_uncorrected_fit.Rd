@@ -55,7 +55,7 @@ y0 <- 20
 beta <- -0.5
 sdlog <- 0.3
 muL <- log(y0)
-x <- seq(1, 8, l = 1001)
+x <- seq(1, 8, l = 101)
 y <- x^beta*rlnorm(length(x), muL, sdlog)
 
 # fit

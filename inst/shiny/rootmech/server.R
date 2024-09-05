@@ -395,6 +395,7 @@ server <- function(input, output, session) {
 
 
   # POWER LAW - SELECTION ####
+
   # model selection
   fittype2 <- shiny::reactive({
     df_fittype$label[df_fittype$name == input$fittype2]
@@ -404,8 +405,8 @@ server <- function(input, output, session) {
     updateSelectInput(
       session,
       "species_family",
-      choices = fit_opts$family[fit_opts$functional_group2 %in% input$species_group],
-      selected = fit_opts$family[fit_opts$functional_group2 %in% input$species_group]
+      choices = fit_opts$family[fit_opts$functional_group %in% input$species_group],
+      selected = fit_opts$family[fit_opts$functional_group %in% input$species_group]
     )
   })
   # update species
@@ -415,11 +416,11 @@ server <- function(input, output, session) {
       "species_species",
       choices = fit_opts$species[
         (fit_opts$family %in% input$species_family) &
-        (fit_opts$functional_group2 %in% input$species_group)
+        (fit_opts$functional_group %in% input$species_group)
         ],
       selected = fit_opts$species[
         (fit_opts$family %in% input$species_family) &
-        (fit_opts$functional_group2 %in% input$species_group)
+        (fit_opts$functional_group %in% input$species_group)
         ]
     )
   })
@@ -430,8 +431,8 @@ server <- function(input, output, session) {
   # generate curves - log-log
   curves <- shiny::reactive({
     df <- tidyr::expand_grid(fit_data(), s = seq(0, 1, l = 101))
-    df$x <- df$`diameter_min [mm]` + df$s*(df$`diameter_max [mm]` - df$`diameter_min [mm]`)
-    df$y <- df$`t_ru0 [MPa]`*df$x^(df$beta_t)
+    df$x <- df$diameter_min + df$s*(df$diameter_max - df$diameter_min)
+    df$y <- df$t*df$x^(df$beta_t)
     df
   })
   # generate plot
@@ -479,18 +480,25 @@ server <- function(input, output, session) {
   })
   # generate table with data
   data_table <- reactive({
-      dd <- fit_data()
-      cn <- colnames(dd)
-      cn[cn == "diameter_min [mm]"] <- "d_min [mm]"
-      cn[cn == "diameter_max [mm]"] <- "d_max [mm]"
-      cn[cn == "t_ru0 [MPa]"] <- "t_0 [MPa]"
-      colnames(dd) <- cn
-      dd[, c("species", "t_0 [MPa]", "beta_t", "d_min [mm]", "d_max [mm]", "reference", "notes")]
+    dd <- fit_data()
+    cn <- colnames(dd)
+    cn[cn == "diameter_min"] <- "d_min [mm]"
+    cn[cn == "diameter_max"] <- "d_max [mm]"
+    cn[cn == "t"] <- "t_0 [MPa]"
+    colnames(dd) <- cn
+    dd[, c("species", "t_0 [MPa]", "beta_t", "d_min [mm]", "d_max [mm]", "html", "digitised", "notes")]
   })
   output$table_powerlaw <- DT::renderDT({  #shiny::renderTable
     DT::formatRound(
-      DT::datatable(data_table(), rownames = FALSE, options = list(
-        paging = TRUE, pageLength = 1000)),
+      DT::datatable(
+        data_table(),
+        rownames = FALSE,
+        options = list(
+          paging = TRUE,
+          pageLength = 1000
+        ),
+        escape = FALSE
+      ),
       columns = c("t_0 [MPa]", "beta_t", "d_min [mm]", "d_max [mm]"),
       digits = 3
     )

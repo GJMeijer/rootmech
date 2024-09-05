@@ -17,7 +17,7 @@ This application generates power law fits between root diameter and root tensile
 > G.J. Meijer. 2024. "Improving power law fitting of root tensile strength–diameter
 relationships". Plant and Soil. DOI:xxx
 
-This interactive application is intended to make the process of obtaining the best power law fit easy. Add you data to the table, and  explore the difference between various fitting methods and the effect of weighting.
+This interactive application is intended to make the process of obtaining the best power law fit easy: add you data and  explore the difference between various fitting methods and the effect of weighting. In addition, you can explore the power law fit results for all data sources discussed in the paper.
 
 Please cite the above publication when using the model or its source code. For any question or comments, please contact <gjm36@bath.ac.uk>. Use of the app is at your own risk and does not come with any form of warranty.
 
@@ -28,7 +28,7 @@ Please cite the above publication when using the model or its source code. For a
 
 This tab can be used to generate power law fits on custom data.
 
-First add your data to the editable table in the left-hand column. You can simply copy-paste from a spreadsheet, or add values manually. Right-clicking opens a contextual menu allowing to add or remove rows to the table.
+First add your data to the editable table in the left-hand column. You can simply copy-paste from a spreadsheet, or add values manually. Right-clicking opens a contextual menu allowing to add or remove rows to the table. By default, the data for maize roots from [Meijer at al. (2024)](https://www.doi.org/10.1007/s11104-024-06507-y) is loaded.
 
 The sliders and menus above the data table determine fit settings:
 
